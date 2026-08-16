@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"c:\\\\Users\\\\adewa\\\\OneDrive\\\\Documents\\\\package\\\\backend\\\\app\\\\routers\" \"c:\\\\Users\\\\adewa\\\\OneDrive\\\\Documents\\\\package\\\\backend\\\\app\\\\services\" \"c:\\\\Users\\\\adewa\\\\OneDrive\\\\Documents\\\\package\\\\backend\\\\app\\\\models\")",
+      "Bash(python -m venv .venv)",
+      "Bash(./.venv/Scripts/python -m pip install -q -r requirements.txt)",
+      "Bash(python -c 'import ast,sys *)",
+      "Bash(./.venv/Scripts/python -m uvicorn app.main:app --port 8000)",
+      "Bash(curl -s http://127.0.0.1:8000/health)",
+      "Bash(curl -s http://127.0.0.1:8000/scan/axios -o axios.json -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(./.venv/Scripts/python -c ' *)",
+      "Bash(curl -s http://127.0.0.1:8000/scan/reactt -o reactt.json -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://127.0.0.1:8000/scan/node-sass -o nodesass.json -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://127.0.0.1:8000/scan/this-package-definitely-does-not-exist-xyz123)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://127.0.0.1:8000/scan/@babel/core -o babel.json)",
+      "Bash(curl -s http://127.0.0.1:8000/scan/event-stream -o es.json -w \"HTTP %{http_code}\\\\n\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\adewa\\OneDrive\\Documents\\package\\backend\\app"
+    ]
+  }
+}
