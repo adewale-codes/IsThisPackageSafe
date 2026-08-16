@@ -1,0 +1,17 @@
+{
+  "name": "packagesafe",
+  "version": "0.1.0",
+  "description": "npm package risk-scanning CLI — thin client over the PackageSafe API",
+  "bin": {
+    "packagesafe": "bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
