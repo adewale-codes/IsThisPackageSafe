@@ -38,6 +38,7 @@ class PackageMetadata(BaseModel):
     dependency_count: int = 0
     install_scripts: dict[str, str] = Field(default_factory=dict)
     tarball_url: Optional[str] = None
+    tarball_shasum: Optional[str] = None
     unpacked_size_bytes: Optional[int] = None
 
 
@@ -71,12 +72,27 @@ class Finding(BaseModel):
     detail: str
 
 
+DeepScanStatus = Literal["completed", "failed", "skipped"]
+
+
+class DeepScanFinding(BaseModel):
+    """Result of the Phase 4 LLM deep-scan pass over a package's source."""
+
+    status: DeepScanStatus
+    obfuscation_detected: bool = False
+    suspicious_network_calls: bool = False
+    summary: str
+    points: int = 0
+    cached: bool = False
+
+
 class DeepScanInfo(BaseModel):
-    """Placeholder describing whether Phase 4's LLM deep-scan layer would trigger."""
+    """Whether the LLM deep-scan layer triggered for this scan, and its result."""
 
     would_trigger: bool
+    implemented: bool = True
     reason: Optional[str] = None
-    implemented: bool = False
+    finding: Optional[DeepScanFinding] = None
 
 
 class ScanResult(BaseModel):

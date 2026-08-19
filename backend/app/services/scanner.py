@@ -21,18 +21,24 @@ async def scan_package(package_name: str) -> ScanResult:
 
     findings = scoring.run_heuristics(package_name, packument, metadata, downloads, github)
     risk_score = scoring.compute_score(findings)
-    verdict = scoring.compute_verdict(risk_score)
 
     would_trigger = deep_scan.should_trigger_deep_scan(risk_score, findings)
+    deep_scan_finding = None
+    if would_trigger:
+        deep_scan_finding = await deep_scan.perform_deep_scan(metadata, package_name)
+        risk_score = min(risk_score + deep_scan_finding.points, 100)
+
+    verdict = scoring.compute_verdict(risk_score)
+
     deep_scan_info = DeepScanInfo(
         would_trigger=would_trigger,
+        implemented=True,
         reason=(
-            "Deterministic score/findings meet the deep-scan trigger threshold; "
-            "LLM deep scan is not implemented until Phase 4."
+            "Deterministic score/findings met the deep-scan trigger threshold."
             if would_trigger
             else None
         ),
-        implemented=False,
+        finding=deep_scan_finding,
     )
 
     return ScanResult(
