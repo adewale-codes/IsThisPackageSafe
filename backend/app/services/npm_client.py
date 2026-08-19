@@ -160,5 +160,6 @@ def normalize_metadata(packument: dict[str, Any]) -> PackageMetadata:
         dependency_count=len(dependencies),
         install_scripts=install_scripts,
         tarball_url=dist.get("tarball"),
+        tarball_shasum=dist.get("shasum"),
         unpacked_size_bytes=dist.get("unpackedSize"),
     )
