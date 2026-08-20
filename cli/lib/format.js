@@ -30,6 +30,14 @@ const SEVERITY_META = {
   info: { icon: "\u{26AA}", color: "gray" },
 };
 
+const VULN_SEVERITY_META = {
+  critical: { icon: "\u{1F534}", color: "red" },
+  high: { icon: "\u{1F7E0}", color: "red" },
+  medium: { icon: "\u{1F7E1}", color: "yellow" },
+  low: { icon: "\u{1F7E2}", color: "green" },
+  unknown: { icon: "\u{26AA}", color: "gray" },
+};
+
 function formatReport(result) {
   const lines = [];
   const verdictMeta = VERDICT_META[result.verdict] || VERDICT_META.investigate;
@@ -41,10 +49,14 @@ function formatReport(result) {
 
   const findings = (result.findings || []).filter((f) => f.points > 0);
 
+  // Supply-chain / malicious-intent signal (typosquatting, maintainer
+  // takeovers, install scripts, ...) - kept in its own section, deliberately
+  // never merged with the known-vulnerabilities section below. A package can
+  // be "not malicious" (no findings here) and still carry a real CVE.
+  lines.push(paint("Supply-chain findings:", "bold"));
   if (findings.length === 0) {
-    lines.push(paint("No findings.", "dim"));
+    lines.push(paint("  No findings.", "dim"));
   } else {
-    lines.push(paint("Findings:", "bold"));
     for (const finding of findings) {
       const sevMeta = SEVERITY_META[finding.severity] || SEVERITY_META.info;
       lines.push(
@@ -54,6 +66,55 @@ function formatReport(result) {
         )}`
       );
       lines.push(`     ${finding.detail}`);
+    }
+  }
+
+  lines.push("");
+  lines.push(formatVulnerabilities(result));
+
+  return lines.join("\n");
+}
+
+// Known-vulnerability (CVE/GHSA) signal, from OSV.dev - independent of the
+// supply-chain findings above. Rendered as its own clearly-labeled section
+// so a "safe" verdict on supply-chain grounds never reads as "no known CVEs".
+function formatVulnerabilities(result) {
+  const lines = [];
+  const vulns = result.vulnerabilities || [];
+  const check = result.vulnerability_check || { status: "completed" };
+
+  const scoreNote =
+    typeof result.vulnerability_score === "number"
+      ? paint(` (+${result.vulnerability_score} to risk score)`, "dim")
+      : "";
+  lines.push(paint("Known vulnerabilities:", "bold") + scoreNote);
+
+  if (check.status === "failed") {
+    lines.push(
+      paint(`  ⚠️  Vulnerability check did not complete${check.note ? `: ${check.note}` : "."}`, "yellow")
+    );
+    return lines.join("\n");
+  }
+
+  if (vulns.length === 0) {
+    lines.push(paint("  No known vulnerabilities found (via OSV.dev).", "dim"));
+    return lines.join("\n");
+  }
+
+  for (const vuln of vulns) {
+    const sevMeta = VULN_SEVERITY_META[vuln.severity] || VULN_SEVERITY_META.unknown;
+    lines.push(
+      `  ${sevMeta.icon} ${paint(vuln.id, "bold", sevMeta.color)} ${paint(
+        `[${vuln.severity}]`,
+        sevMeta.color
+      )} ${paint(`(+${vuln.points})`, "dim")}`
+    );
+    lines.push(`     ${vuln.summary}`);
+    if (vuln.fixed_version) {
+      lines.push(paint(`     Fixed in ${vuln.fixed_version}`, "dim"));
+    }
+    if (vuln.references && vuln.references[0]) {
+      lines.push(paint(`     ${vuln.references[0]}`, "dim"));
     }
   }
 

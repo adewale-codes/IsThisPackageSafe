@@ -63,22 +63,59 @@ export interface GithubSignals {
   error?: string | null;
 }
 
+export type DeepScanStatus = "completed" | "failed" | "skipped";
+
+export interface DeepScanFinding {
+  status: DeepScanStatus;
+  obfuscation_detected: boolean;
+  suspicious_network_calls: boolean;
+  summary: string;
+  points: number;
+  cached: boolean;
+}
+
 export interface DeepScanInfo {
   would_trigger: boolean;
   reason?: string | null;
   implemented: boolean;
+  finding?: DeepScanFinding | null;
+}
+
+// Known-vulnerability (CVE/GHSA) signal from OSV.dev (Phase 6) - kept
+// structurally separate from Finding/heuristics throughout: a package can
+// be "not malicious" (no Findings) and still carry a real, serious CVE.
+export type VulnSeverity = "critical" | "high" | "medium" | "low" | "unknown";
+
+export interface VulnerabilityFinding {
+  id: string;
+  summary: string;
+  severity: VulnSeverity;
+  fixed_version?: string | null;
+  references: string[];
+  points: number;
+}
+
+export type VulnCheckStatusValue = "completed" | "failed";
+
+export interface VulnerabilityCheckStatus {
+  status: VulnCheckStatusValue;
+  note?: string | null;
 }
 
 export interface ScanResult {
   package: string;
   resolved_version: string;
   risk_score: number;
+  heuristics_score: number;
+  vulnerability_score: number;
   verdict: Verdict;
   metadata: PackageMetadata;
   downloads: DownloadStats;
   github: GithubSignals;
   findings: Finding[];
   deep_scan: DeepScanInfo;
+  vulnerabilities: VulnerabilityFinding[];
+  vulnerability_check: VulnerabilityCheckStatus;
 }
 
 const DEFAULT_API_URL = "http://localhost:8000";
