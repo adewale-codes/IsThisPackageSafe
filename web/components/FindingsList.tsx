@@ -3,21 +3,21 @@ import type { Finding, Severity } from "@/lib/scan";
 const SEVERITY_CONFIG: Record<Severity, { icon: string; color: string; bg: string; border: string }> = {
   danger: {
     icon: "\u{1F534}",
-    color: "#ef4444",
-    bg: "rgba(239,68,68,0.08)",
-    border: "rgba(239,68,68,0.25)",
+    color: "#dc2626",
+    bg: "rgba(220,38,38,0.08)",
+    border: "rgba(220,38,38,0.3)",
   },
   warning: {
     icon: "\u{1F7E1}",
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.08)",
-    border: "rgba(245,158,11,0.25)",
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.08)",
+    border: "rgba(217,119,6,0.3)",
   },
   info: {
     icon: "\u{26AA}",
     color: "#64748b",
-    bg: "rgba(100,116,139,0.08)",
-    border: "rgba(100,116,139,0.2)",
+    bg: "rgba(100,116,139,0.06)",
+    border: "rgba(100,116,139,0.25)",
   },
 };
 
@@ -49,7 +49,7 @@ export default function FindingsList({ findings }: { findings: Finding[] }) {
                   {finding.label}
                 </span>
               </div>
-              <span className="rounded-full bg-background px-2 py-0.5 font-mono text-xs text-muted">
+              <span className="rounded-full border border-border bg-surface px-2 py-0.5 font-mono text-xs text-muted">
                 +{finding.points}
               </span>
             </div>

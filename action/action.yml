@@ -1,0 +1,36 @@
+name: 'PackageSafe Check'
+description: 'Scan npm packages for supply-chain risk with PackageSafe and fail the build on flagged dependencies.'
+author: 'PackageSafe'
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  package:
+    description: >
+      A single package name to scan (e.g. "axios"). If set, this overrides
+      package-json scanning and only this package is checked.
+    required: false
+    default: ''
+  package-json:
+    description: 'Path to a package.json to scan dependencies + devDependencies from.'
+    required: false
+    default: 'package.json'
+  api-url:
+    description: 'Base URL of the PackageSafe API.'
+    required: false
+    default: 'https://api.packagesafe.dev'
+  fail-on:
+    description: 'Comma-separated verdicts that should fail the build.'
+    required: false
+    default: 'suspicious,investigate'
+
+outputs:
+  verdict:
+    description: 'Worst verdict found across all scanned packages (safe, suspicious, or investigate).'
+  flagged:
+    description: 'JSON array of {package, version, verdict, risk_score} for every package matching fail-on.'
+
+runs:
+  using: 'node20'
+  main: 'index.js'

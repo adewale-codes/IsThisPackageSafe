@@ -1,7 +1,7 @@
 # packagesafe (CLI)
 
 Thin terminal client for the PackageSafe risk-scanning API. Contains no scoring
-logic of its own — it calls `GET /scan/{package}` on the PackageSafe backend
+logic of its own - it calls `GET /scan/{package}` on the PackageSafe backend
 (Phase 1) and renders the result.
 
 ## Usage
@@ -21,9 +21,9 @@ packagesafe axios
 
 ### Options
 
-- `--json` — print the raw `ScanResult` JSON instead of a formatted report (for scripting)
-- `--api-url <url>` — override the API base URL for this run
-- `-h, --help` — show usage
+- `--json` - print the raw `ScanResult` JSON instead of a formatted report (for scripting)
+- `--api-url <url>` - override the API base URL for this run
+- `-h, --help` - show usage
 
 ### Configuration
 
@@ -39,8 +39,8 @@ or the `--api-url` flag (which takes precedence over the env var).
 
 ## Exit codes
 
-- `0` — verdict is `safe`
-- `1` — verdict is `suspicious` or `investigate`, the package wasn't found, or
+- `0` - verdict is `safe`
+- `1` - verdict is `suspicious` or `investigate`, the package wasn't found, or
   the API could not be reached
 
 This makes the CLI usable as a CI gate:

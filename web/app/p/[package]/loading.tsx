@@ -20,7 +20,7 @@ export default function Loading() {
         </div>
       </div>
       <p className="mt-6 text-center text-sm text-muted">
-        Scanning package — this fetches live data from the npm registry and GitHub, so it can take
+        Scanning package - this fetches live data from the npm registry and GitHub, so it can take
         a few seconds…
       </p>
     </main>

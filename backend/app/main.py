@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import scan
+from app.routers import badge, scan
 
 app = FastAPI(
     title="PackageSafe",
@@ -18,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(scan.router)
+app.include_router(badge.router)
 
 
 @app.get("/health")
