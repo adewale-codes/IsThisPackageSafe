@@ -20,3 +20,5 @@ web/.env*.local
 # misc
 *.log
 .DS_Store
+backend/.venv/
+.venv/
