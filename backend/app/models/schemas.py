@@ -95,13 +95,48 @@ class DeepScanInfo(BaseModel):
     finding: Optional[DeepScanFinding] = None
 
 
+VulnSeverity = Literal["critical", "high", "medium", "low", "unknown"]
+
+
+class VulnerabilityFinding(BaseModel):
+    """A single known-vulnerability record from OSV.dev (Phase 6).
+
+    Deliberately separate from Finding: this represents a published CVE/GHSA
+    advisory against an otherwise-legitimate package, not a supply-chain/
+    malicious-intent signal - the two must never be merged into one list.
+    """
+
+    id: str
+    summary: str
+    severity: VulnSeverity
+    fixed_version: Optional[str] = None
+    references: list[str] = Field(default_factory=list)
+    points: int = 0
+
+
+VulnCheckStatusValue = Literal["completed", "failed"]
+
+
+class VulnerabilityCheckStatus(BaseModel):
+    """Whether the OSV.dev lookup itself succeeded - independent of whether
+    any vulnerabilities were found. Mirrors DeepScanFinding's fail-visibly
+    pattern: a failed check must never look identical to a clean result."""
+
+    status: VulnCheckStatusValue
+    note: Optional[str] = None
+
+
 class ScanResult(BaseModel):
     package: str
     resolved_version: str
     risk_score: int
+    heuristics_score: int
+    vulnerability_score: int
     verdict: Verdict
     metadata: PackageMetadata
     downloads: DownloadStats
     github: GithubSignals
     findings: list[Finding]
     deep_scan: DeepScanInfo
+    vulnerabilities: list[VulnerabilityFinding]
+    vulnerability_check: VulnerabilityCheckStatus
