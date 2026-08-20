@@ -1,0 +1,15 @@
+# Example: this workflow is EXPECTED to pass - it scans `axios`, a
+# long-established, well-maintained package that PackageSafe scores as safe.
+name: PackageSafe example - safe package
+on:
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan a known-safe package
+        uses: packagesafe/check@v1
+        with:
+          package: axios

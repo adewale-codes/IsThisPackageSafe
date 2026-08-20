@@ -80,7 +80,7 @@ def rule_maintainer_change(packument: dict[str, Any], metadata: PackageMetadata)
                     points=35,
                     detail=(
                         f"All maintainers changed between {prev_version} ({', '.join(sorted(prev_maintainers))}) "
-                        f"and {curr_version} ({', '.join(sorted(curr_maintainers))}) — a classic package "
+                        f"and {curr_version} ({', '.join(sorted(curr_maintainers))}) - a classic package "
                         "takeover signal."
                     ),
                 )

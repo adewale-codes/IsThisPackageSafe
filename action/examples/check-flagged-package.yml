@@ -1,0 +1,16 @@
+# Example: this workflow is EXPECTED to fail - it scans `reactt`, a
+# typosquat of `react`, which PackageSafe flags as `suspicious`. Demonstrates
+# that a flagged dependency fails the build with a clear log message.
+name: PackageSafe example - flagged package
+on:
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan a known-flagged package
+        uses: packagesafe/check@v1
+        with:
+          package: reactt

@@ -122,7 +122,7 @@ export function buildScanUrl(packageName: string): string {
 /**
  * Fetches a live scan from the Phase 1 API. Wrapped in React's cache() so a
  * single request (page + generateMetadata + any other callers) only hits the
- * API once — there is no server-side result caching beyond that, matching
+ * API once - there is no server-side result caching beyond that, matching
  * Phase 1/2's "every load is a live scan" behavior.
  */
 export const scanPackage = cache(async (packageName: string): Promise<ScanResult> => {

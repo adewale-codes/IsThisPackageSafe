@@ -7,9 +7,9 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const VERDICT_COLORS: Record<string, string> = {
-  safe: "#22c55e",
-  suspicious: "#f59e0b",
-  investigate: "#ef4444",
+  safe: "#16a34a",
+  suspicious: "#d97706",
+  investigate: "#dc2626",
 };
 
 export default async function OpengraphImage({
@@ -33,7 +33,7 @@ export default async function OpengraphImage({
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            backgroundColor: "#0a0a0f",
+            backgroundColor: "#ffffff",
             padding: "64px",
             fontFamily: "sans-serif",
           }}
@@ -45,16 +45,16 @@ export default async function OpengraphImage({
                 width: "14px",
                 height: "14px",
                 borderRadius: "9999px",
-                backgroundColor: "#6366f1",
+                backgroundColor: "#4f46e5",
               }}
             />
-            <div style={{ display: "flex", fontSize: 28, color: "#e2e8f0", fontWeight: 700 }}>
+            <div style={{ display: "flex", fontSize: 28, color: "#1e293b", fontWeight: 700 }}>
               PackageSafe
             </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", fontSize: 44, color: "#e2e8f0", fontWeight: 700 }}>
+            <div style={{ display: "flex", fontSize: 44, color: "#1e293b", fontWeight: 700 }}>
               {result.package}
               <span style={{ color: "#64748b", marginLeft: 12 }}>@{result.resolved_version}</span>
             </div>
@@ -104,11 +104,11 @@ export default async function OpengraphImage({
             justifyContent: "center",
             alignItems: "center",
             gap: "16px",
-            backgroundColor: "#0a0a0f",
+            backgroundColor: "#ffffff",
             fontFamily: "sans-serif",
           }}
         >
-          <div style={{ display: "flex", fontSize: 40, color: "#e2e8f0", fontWeight: 700 }}>
+          <div style={{ display: "flex", fontSize: 40, color: "#1e293b", fontWeight: 700 }}>
             PackageSafe
           </div>
           <div style={{ display: "flex", fontSize: 28, color: "#64748b" }}>

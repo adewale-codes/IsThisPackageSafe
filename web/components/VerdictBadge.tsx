@@ -7,23 +7,23 @@ const VERDICT_CONFIG: Record<
   safe: {
     label: "Safe",
     icon: "\u{1F7E2}",
-    color: "#22c55e",
-    bg: "rgba(34,197,94,0.10)",
-    border: "rgba(34,197,94,0.25)",
+    color: "#16a34a",
+    bg: "rgba(22,163,74,0.10)",
+    border: "rgba(22,163,74,0.35)",
   },
   suspicious: {
     label: "Suspicious",
     icon: "\u{1F7E1}",
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.10)",
-    border: "rgba(245,158,11,0.25)",
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.10)",
+    border: "rgba(217,119,6,0.35)",
   },
   investigate: {
     label: "Investigate",
     icon: "\u{1F534}",
-    color: "#ef4444",
-    bg: "rgba(239,68,68,0.10)",
-    border: "rgba(239,68,68,0.25)",
+    color: "#dc2626",
+    bg: "rgba(220,38,38,0.10)",
+    border: "rgba(220,38,38,0.35)",
   },
 };
 

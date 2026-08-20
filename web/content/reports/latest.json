@@ -1,0 +1,306 @@
+{
+  "generated_at": "2026-08-19T16:57:23.844932+00:00",
+  "period_label": "Week of 2026-08-19",
+  "packages_scanned": 27,
+  "packages_failed": 0,
+  "failed": [],
+  "packages": [
+    {
+      "rank": 1,
+      "package": "typescript",
+      "version": "7.0.2",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "TypeScript is a language for application scale JavaScript development",
+      "top_finding": {
+        "id": "maintainer_change_history",
+        "label": "Full maintainer replacement in package history",
+        "severity": "warning",
+        "points": 15,
+        "detail": "All maintainers changed between 3.8.2 and 3.9.0-dev.20200221 earlier in the package's history."
+      }
+    },
+    {
+      "rank": 2,
+      "package": "jest",
+      "version": "30.4.2",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "Delightful JavaScript Testing.",
+      "top_finding": {
+        "id": "maintainer_change_history",
+        "label": "Full maintainer replacement in package history",
+        "severity": "warning",
+        "points": 15,
+        "detail": "All maintainers changed between 0.1.40 and 12.1.0 earlier in the package's history."
+      }
+    },
+    {
+      "rank": 3,
+      "package": "jquery",
+      "version": "4.0.0",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "JavaScript library for DOM operations",
+      "top_finding": {
+        "id": "maintainer_change_history",
+        "label": "Full maintainer replacement in package history",
+        "severity": "warning",
+        "points": 15,
+        "detail": "All maintainers changed between 1.8.3 and 2.1.0-beta2 earlier in the package's history."
+      }
+    },
+    {
+      "rank": 4,
+      "package": "next",
+      "version": "16.3.1",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "The React Framework",
+      "top_finding": {
+        "id": "maintainer_change_history",
+        "label": "Full maintainer replacement in package history",
+        "severity": "warning",
+        "points": 15,
+        "detail": "All maintainers changed between 0.4.1 and 0.9.9 earlier in the package's history."
+      }
+    },
+    {
+      "rank": 5,
+      "package": "redux",
+      "version": "5.0.1",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "Predictable state container for JavaScript apps",
+      "top_finding": {
+        "id": "maintainer_change_history",
+        "label": "Full maintainer replacement in package history",
+        "severity": "warning",
+        "points": 15,
+        "detail": "All maintainers changed between 0.0.4 and 0.1.0 earlier in the package's history."
+      }
+    },
+    {
+      "rank": 6,
+      "package": "rxjs",
+      "version": "7.8.2",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "Reactive Extensions for modern JavaScript",
+      "top_finding": {
+        "id": "maintainer_change_history",
+        "label": "Full maintainer replacement in package history",
+        "severity": "warning",
+        "points": 15,
+        "detail": "All maintainers changed between 5.0.0-alpha.10 and 5.0.0-alpha.11 earlier in the package's history."
+      }
+    },
+    {
+      "rank": 7,
+      "package": "node-sass",
+      "version": "9.0.0",
+      "risk_score": 15,
+      "verdict": "safe",
+      "description": "Wrapper around libsass",
+      "top_finding": {
+        "id": "install_scripts",
+        "label": "Runs code automatically on install",
+        "severity": "warning",
+        "points": 15,
+        "detail": "Package defines lifecycle script(s) that execute on install: install, postinstall."
+      }
+    },
+    {
+      "rank": 8,
+      "package": "express",
+      "version": "5.2.1",
+      "risk_score": 5,
+      "verdict": "safe",
+      "description": "Fast, unopinionated, minimalist web framework",
+      "top_finding": {
+        "id": "dependency_count",
+        "label": "High dependency count",
+        "severity": "info",
+        "points": 5,
+        "detail": "Package declares 28 direct dependencies."
+      }
+    },
+    {
+      "rank": 9,
+      "package": "eslint",
+      "version": "10.8.1",
+      "risk_score": 5,
+      "verdict": "safe",
+      "description": "An AST-based pattern checker for JavaScript.",
+      "top_finding": {
+        "id": "dependency_count",
+        "label": "High dependency count",
+        "severity": "info",
+        "points": 5,
+        "detail": "Package declares 30 direct dependencies."
+      }
+    },
+    {
+      "rank": 10,
+      "package": "react",
+      "version": "19.2.8",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "React is a JavaScript library for building user interfaces.",
+      "top_finding": null
+    },
+    {
+      "rank": 11,
+      "package": "vue",
+      "version": "3.5.41",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "The progressive JavaScript framework for building modern web UI.",
+      "top_finding": null
+    },
+    {
+      "rank": 12,
+      "package": "lodash",
+      "version": "4.18.1",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Lodash modular utilities.",
+      "top_finding": null
+    },
+    {
+      "rank": 13,
+      "package": "axios",
+      "version": "1.19.0",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Promise based HTTP client for the browser and node.js",
+      "top_finding": null
+    },
+    {
+      "rank": 14,
+      "package": "webpack",
+      "version": "5.109.2",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Packs ECMAScript/CommonJs/AMD modules for the browser. Allows you to split your codebase into multiple bundles, which can be loaded on demand. Supports loaders to preprocess files, i.e. json, jsx, es7, css, less, ... and your custom stuff.",
+      "top_finding": null
+    },
+    {
+      "rank": 15,
+      "package": "@babel/core",
+      "version": "8.0.1",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Babel compiler core.",
+      "top_finding": null
+    },
+    {
+      "rank": 16,
+      "package": "chalk",
+      "version": "6.0.0",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Terminal string styling done right",
+      "top_finding": null
+    },
+    {
+      "rank": 17,
+      "package": "commander",
+      "version": "15.0.0",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "the complete solution for node.js command-line programs",
+      "top_finding": null
+    },
+    {
+      "rank": 18,
+      "package": "moment",
+      "version": "2.30.1",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Parse, validate, manipulate, and display dates",
+      "top_finding": null
+    },
+    {
+      "rank": 19,
+      "package": "request",
+      "version": "2.88.2",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Simplified HTTP request client.",
+      "top_finding": null
+    },
+    {
+      "rank": 20,
+      "package": "async",
+      "version": "3.2.6",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Higher-order functions and common patterns for asynchronous code",
+      "top_finding": null
+    },
+    {
+      "rank": 21,
+      "package": "socket.io",
+      "version": "4.8.3",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "node.js realtime framework server",
+      "top_finding": null
+    },
+    {
+      "rank": 22,
+      "package": "prettier",
+      "version": "3.9.6",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Prettier is an opinionated code formatter",
+      "top_finding": null
+    },
+    {
+      "rank": 23,
+      "package": "dotenv",
+      "version": "17.4.2",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Loads environment variables from .env file",
+      "top_finding": null
+    },
+    {
+      "rank": 24,
+      "package": "colors",
+      "version": "1.4.0",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "get colors in your node.js console",
+      "top_finding": null
+    },
+    {
+      "rank": 25,
+      "package": "faker",
+      "version": "6.6.6",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "Generate massive amounts of fake contextual data",
+      "top_finding": null
+    },
+    {
+      "rank": 26,
+      "package": "event-stream",
+      "version": "4.0.1",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "construct pipes of streams of events",
+      "top_finding": null
+    },
+    {
+      "rank": 27,
+      "package": "left-pad",
+      "version": "1.3.0",
+      "risk_score": 0,
+      "verdict": "safe",
+      "description": "String left pad",
+      "top_finding": null
+    }
+  ]
+}

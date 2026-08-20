@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../backend.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Passed through from the repo-root .env file if present. Both are
+      # optional - the backend degrades gracefully without them (lower
+      # unauthenticated GitHub API rate limits without GITHUB_TOKEN;
+      # deep-scan findings report "failed" rather than crashing without
+      # ANTHROPIC_API_KEY - see backend/app/services/deep_scan.py).
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./web
+      dockerfile: ../frontend.Dockerfile
+      args:
+        # Baked in at build time (see frontend.Dockerfile) - the
+        # host-reachable URL for the frontend itself, used for absolute OG
+        # image links.
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    environment:
+      # web/lib/scan.ts reads this server-side, per-request, at runtime (no
+      # NEXT_PUBLIC_ prefix, so it does NOT need to be baked in at build
+      # time). "backend" resolves via Docker Compose's internal DNS to the
+      # backend service/container - this is what makes the frontend
+      # container actually reach the backend container rather than trying
+      # (and failing) to hit its own localhost:8000.
+      - PACKAGESAFE_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped

@@ -12,8 +12,8 @@ export default function HomePage() {
           <span className="font-light text-accent">npm install</span>ing.
         </h1>
         <p className="mt-5 max-w-2xl text-base text-muted sm:text-lg">
-          PackageSafe scores any npm package for supply-chain risk in seconds —
-          typosquats, maintainer takeovers, sketchy install scripts, and more —
+          PackageSafe scores any npm package for supply-chain risk in seconds -
+          typosquats, maintainer takeovers, sketchy install scripts, and more -
           before it ends up in your lockfile.
         </p>
 
@@ -46,7 +46,7 @@ export default function HomePage() {
                 Every scan runs a fixed set of checks against the npm registry and
                 GitHub: package age, maintainer change history, install scripts,
                 typosquatting, dependency count, and repo/npm activity mismatches.
-                Each contributes points to a 0–100 risk score — no LLM involved,
+                Each contributes points to a 0–100 risk score - no LLM involved,
                 so results are fast and reproducible.
               </p>
             </div>
@@ -57,7 +57,7 @@ export default function HomePage() {
               <p className="mt-2 text-sm text-muted">
                 Packages that already score as suspicious, or trip a
                 danger-severity finding, get flagged for a deeper LLM-driven
-                source inspection — looking for obfuscated payloads or
+                source inspection - looking for obfuscated payloads or
                 exfiltration code that static rules alone would miss. This
                 layer is still in development.
               </p>

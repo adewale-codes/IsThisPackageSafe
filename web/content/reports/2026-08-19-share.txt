@@ -1,0 +1,9 @@
+📊 PackageSafe's riskiest npm packages this week (Week of 2026-08-19):
+
+🟢 typescript: 15/100 - Full maintainer replacement in package history
+🟢 jest: 15/100 - Full maintainer replacement in package history
+🟢 jquery: 15/100 - Full maintainer replacement in package history
+
+Full ranking + why each package scored what it did: https://packagesafe.dev/reports
+
+#npm #supplychainsecurity #opensource

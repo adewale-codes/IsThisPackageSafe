@@ -29,12 +29,12 @@ export async function generateMetadata({
     const result = await scanPackage(packageName);
     const verdictLabel = result.verdict[0].toUpperCase() + result.verdict.slice(1);
     return {
-      title: `${result.package} — ${verdictLabel} (${result.risk_score}/100)`,
+      title: `${result.package} - ${verdictLabel} (${result.risk_score}/100)`,
       description: `${result.package}@${result.resolved_version} scored ${result.risk_score}/100 on PackageSafe (${result.verdict}). See the full risk breakdown.`,
     };
   } catch {
     return {
-      title: `${packageName} — not found`,
+      title: `${packageName} - not found`,
       description: `PackageSafe could not find '${packageName}' on the npm registry.`,
     };
   }
@@ -101,12 +101,12 @@ export default async function PackageResultPage({
           <div>
             <dt className="text-xs uppercase tracking-widest text-muted">Downloads</dt>
             <dd className="mt-1 font-mono">
-              {result.downloads.available ? result.downloads.downloads.toLocaleString() : "—"}
+              {result.downloads.available ? result.downloads.downloads.toLocaleString() : "-"}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-widest text-muted">First published</dt>
-            <dd className="mt-1">{publishedAt ?? "—"}</dd>
+            <dd className="mt-1">{publishedAt ?? "-"}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-widest text-muted">Dependencies</dt>
@@ -128,7 +128,7 @@ export default async function PackageResultPage({
             <p className="mt-1 text-muted">
               This package&apos;s deterministic score already warrants a closer look, but
               the LLM-driven deep-scan layer isn&apos;t implemented yet. Treat the findings
-              below as the current picture — a fuller source-level analysis is planned.
+              below as the current picture - a fuller source-level analysis is planned.
             </p>
           </div>
         )}

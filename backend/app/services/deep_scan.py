@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 DEEP_SCAN_SCORE_THRESHOLD = 25
 
-# Anthropic's "cheap/fast classification" tier — this is a bounded-output
+# Anthropic's "cheap/fast classification" tier - this is a bounded-output
 # yes/no/summary classification over a handful of KB of source, not deep
 # reasoning, so Haiku 4.5 is the right cost/latency tradeoff ($1/$5 per MTok
 # vs. $3+/$15+ for Sonnet/Opus tiers). A scan sends at most ~50KB of source
@@ -85,7 +85,7 @@ class IntegrityError(Exception):
 
 # In-process cache keyed by tarball shasum. A given package version's
 # tarball never changes, so once we've deep-scanned a shasum there's no
-# reason to pay for another LLM call — this is the single biggest cost
+# reason to pay for another LLM call - this is the single biggest cost
 # control available given neither Phase 1 nor Phase 2 have a cache yet.
 _RESULT_CACHE: dict[str, DeepScanFinding] = {}
 
@@ -208,7 +208,7 @@ def _suspicion_reasons(content: str) -> list[str]:
 def _select_candidates(root: Path, metadata: PackageMetadata) -> list[tuple[str, str, list[str]]]:
     """Return (relative_path, content, reasons) tuples, install-script-linked
     and entry-point files first, then pattern-flagged files, most-suspicious
-    first — the priority order candidates are added to the LLM prompt in."""
+    first - the priority order candidates are added to the LLM prompt in."""
 
     script_paths = set(_extract_script_paths(metadata.install_scripts))
     entry_point = _read_entry_point(root)
@@ -319,11 +319,11 @@ set of high-signal source file excerpts (install scripts, the entry point, and \
 files flagged as possibly obfuscated).
 
 Assess specifically:
-1. Code obfuscation — minification, encoded/packed payloads, unusual control \
+1. Code obfuscation - minification, encoded/packed payloads, unusual control \
    flow that hides what the code does.
-2. Unexplained network calls — requests to hosts that have no obvious relation \
+2. Unexplained network calls - requests to hosts that have no obvious relation \
    to the package's stated purpose.
-3. Data exfiltration patterns — code that reads sensitive data (environment \
+3. Data exfiltration patterns - code that reads sensitive data (environment \
    variables, credentials, SSH keys, browser data) and sends it somewhere.
 4. Whether the code's actual behavior plausibly matches what a package with \
    this name and description would do.
@@ -374,7 +374,7 @@ async def run_deep_scan(
 
     Returns a DeepScanFinding describing the outcome. On any error or
     timeout this returns status="failed" with an explanatory summary rather
-    than silently reporting a clean result — a failed deep scan must never
+    than silently reporting a clean result - a failed deep scan must never
     be presented as a false-negative "safe".
     """
 

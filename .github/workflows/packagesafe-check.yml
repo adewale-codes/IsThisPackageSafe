@@ -1,0 +1,30 @@
+name: PackageSafe check (dogfood)
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'action/**'
+
+jobs:
+  flagged-package-should-fail:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - id: scan
+        uses: ./action
+        with:
+          package: reactt
+      - name: Verify it actually failed
+        if: steps.scan.outcome != 'failure'
+        run: |
+          echo "::error::Expected the reactt scan step to fail, but it did not."
+          exit 1
+
+  safe-package-should-pass:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./action
+        with:
+          package: axios
