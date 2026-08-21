@@ -2,6 +2,10 @@ import { cache } from "react";
 
 export type Severity = "info" | "warning" | "danger";
 export type Verdict = "safe" | "suspicious" | "investigate";
+export type Ecosystem = "npm" | "pypi" | "maven";
+
+export const ECOSYSTEMS: Ecosystem[] = ["npm", "pypi", "maven"];
+export const DEFAULT_ECOSYSTEM: Ecosystem = "npm";
 
 export interface Finding {
   id: string;
@@ -23,6 +27,7 @@ export interface RepositoryInfo {
 }
 
 export interface PackageMetadata {
+  ecosystem: Ecosystem;
   name: string;
   description?: string | null;
   latest_version: string;
@@ -103,6 +108,7 @@ export interface VulnerabilityCheckStatus {
 }
 
 export interface ScanResult {
+  ecosystem: Ecosystem;
   package: string;
   resolved_version: string;
   risk_score: number;
@@ -148,22 +154,25 @@ export function resolveApiUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
-export function buildScanUrl(packageName: string): string {
+export function buildScanUrl(packageName: string, ecosystem: Ecosystem = DEFAULT_ECOSYSTEM): string {
   const encodedPath = packageName
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `${resolveApiUrl()}/scan/${encodedPath}`;
+  return `${resolveApiUrl()}/scan/${ecosystem}/${encodedPath}`;
 }
 
 /**
- * Fetches a live scan from the Phase 1 API. Wrapped in React's cache() so a
- * single request (page + generateMetadata + any other callers) only hits the
- * API once - there is no server-side result caching beyond that, matching
+ * Fetches a live scan from the API. Wrapped in React's cache() so a single
+ * request (page + generateMetadata + any other callers) only hits the API
+ * once - there is no server-side result caching beyond that, matching
  * Phase 1/2's "every load is a live scan" behavior.
  */
-export const scanPackage = cache(async (packageName: string): Promise<ScanResult> => {
-  const url = buildScanUrl(packageName);
+export const scanPackage = cache(async (
+  packageName: string,
+  ecosystem: Ecosystem = DEFAULT_ECOSYSTEM
+): Promise<ScanResult> => {
+  const url = buildScanUrl(packageName, ecosystem);
 
   let response: Response;
   try {
@@ -184,7 +193,7 @@ export const scanPackage = cache(async (packageName: string): Promise<ScanResult
       // fall through to default message
     }
     throw new PackageNotFoundError(
-      detail || `Package '${packageName}' was not found on the npm registry.`
+      detail || `Package '${packageName}' was not found in the ${ecosystem} registry.`
     );
   }
 

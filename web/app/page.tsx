@@ -25,7 +25,7 @@ export default function HomePage() {
           <span>Try it:</span>
           {EXAMPLES.map((name, i) => (
             <span key={name} className="flex items-center gap-2">
-              <Link href={`/p/${name}`} className="text-accent hover:underline">
+              <Link href={`/p/npm/${name}`} className="text-accent hover:underline">
                 {name}
               </Link>
               {i < EXAMPLES.length - 1 && <span className="text-border">·</span>}

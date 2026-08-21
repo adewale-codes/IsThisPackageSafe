@@ -34,7 +34,7 @@ async def get_cached_scan(package_name: str) -> ScanResult:
     if cached is not None and (now - cached[0]) < _TTL_SECONDS:
         return cached[1]
 
-    result = await scanner.scan_package(package_name)
+    result = await scanner.scan_package("npm", package_name)
     _CACHE[package_name] = (now, result)
     return result
 

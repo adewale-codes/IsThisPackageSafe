@@ -1,12 +1,15 @@
 "use strict";
 
 const DEFAULT_API_URL = "http://localhost:8000";
+const VALID_ECOSYSTEMS = ["npm", "pypi", "maven"];
+const DEFAULT_ECOSYSTEM = "npm";
 
 class PackageNotFoundError extends Error {
-  constructor(packageName, apiMessage) {
-    super(apiMessage || `Package '${packageName}' was not found on the npm registry.`);
+  constructor(packageName, ecosystem, apiMessage) {
+    super(apiMessage || `Package '${packageName}' was not found in the ${ecosystem} registry.`);
     this.name = "PackageNotFoundError";
     this.packageName = packageName;
+    this.ecosystem = ecosystem;
   }
 }
 
@@ -31,21 +34,39 @@ function resolveApiUrl(explicitUrl) {
   return url.replace(/\/+$/, "");
 }
 
-function buildScanUrl(apiUrl, packageName) {
-  const encodedPath = packageName
+/**
+ * A bare "package" argument may be prefixed with a recognized ecosystem name
+ * and a colon (e.g. "pypi:requests", "maven:com.google.guava:guava" - only
+ * the first colon is a delimiter, so Maven's own groupId:artifactId syntax
+ * survives intact). Anything else - including a plain npm name/scoped
+ * package - defaults to npm, so existing usage keeps working unchanged.
+ */
+function parsePackageArg(rawArg) {
+  const colonIndex = rawArg.indexOf(":");
+  if (colonIndex > 0) {
+    const prefix = rawArg.slice(0, colonIndex);
+    if (VALID_ECOSYSTEMS.includes(prefix)) {
+      return { ecosystem: prefix, packageIdentifier: rawArg.slice(colonIndex + 1) };
+    }
+  }
+  return { ecosystem: DEFAULT_ECOSYSTEM, packageIdentifier: rawArg };
+}
+
+function buildScanUrl(apiUrl, ecosystem, packageIdentifier) {
+  const encodedPath = packageIdentifier
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `${apiUrl}/scan/${encodedPath}`;
+  return `${apiUrl}/scan/${ecosystem}/${encodedPath}`;
 }
 
 /**
- * Calls the PackageSafe API's GET /scan/{package} endpoint.
+ * Calls the PackageSafe API's GET /scan/{ecosystem}/{package} endpoint.
  * @returns {Promise<object>} the parsed ScanResult
  */
-async function scanPackage(packageName, { apiUrl } = {}) {
+async function scanPackage(packageName, { apiUrl, ecosystem = DEFAULT_ECOSYSTEM } = {}) {
   const resolvedApiUrl = resolveApiUrl(apiUrl);
-  const url = buildScanUrl(resolvedApiUrl, packageName);
+  const url = buildScanUrl(resolvedApiUrl, ecosystem, packageName);
 
   let response;
   try {
@@ -65,7 +86,7 @@ async function scanPackage(packageName, { apiUrl } = {}) {
     } catch {
       // fall through to default message
     }
-    throw new PackageNotFoundError(packageName, detail);
+    throw new PackageNotFoundError(packageName, ecosystem, detail);
   }
 
   if (!response.ok) {
@@ -89,8 +110,11 @@ module.exports = {
   scanPackage,
   resolveApiUrl,
   buildScanUrl,
+  parsePackageArg,
   PackageNotFoundError,
   ApiError,
   NetworkError,
   DEFAULT_API_URL,
+  VALID_ECOSYSTEMS,
+  DEFAULT_ECOSYSTEM,
 };

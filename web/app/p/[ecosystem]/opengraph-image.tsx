@@ -12,12 +12,21 @@ const VERDICT_COLORS: Record<string, string> = {
   investigate: "#dc2626",
 };
 
+// Legacy single-segment route (see page.tsx in this folder) - this segment
+// holds a *package* name, ecosystem=npm implied. Kept unchanged for links
+// shared before /p/[ecosystem]/[package] existed, rather than routing
+// pre-existing shared image URLs through a redirect.
 export default async function OpengraphImage({
   params,
 }: {
-  params: { package: string };
+  params: { ecosystem: string };
 }) {
-  const packageName = params.package;
+  let packageName = params.ecosystem;
+  try {
+    packageName = decodeURIComponent(packageName);
+  } catch {
+    // leave as-is if not validly encoded
+  }
 
   try {
     const result = await scanPackage(packageName);
