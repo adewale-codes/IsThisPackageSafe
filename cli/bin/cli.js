@@ -1,12 +1,24 @@
 #!/usr/bin/env node
 "use strict";
 
-const { scanPackage, PackageNotFoundError, ApiError, NetworkError } = require("../lib/scan");
+const {
+  scanPackage,
+  parsePackageArg,
+  PackageNotFoundError,
+  ApiError,
+  NetworkError,
+  VALID_ECOSYSTEMS,
+} = require("../lib/scan");
 const { formatReport } = require("../lib/format");
 
 const USAGE = `Usage: packagesafe <package-name> [options]
 
+A package name may be prefixed with an ecosystem and a colon to scan a
+non-npm registry, e.g. "pypi:requests" or "maven:com.google.guava:guava".
+Unprefixed names default to npm.
+
 Options:
+  --ecosystem <name>  Ecosystem to scan: npm, pypi, or maven (default: npm)
   --json              Print raw JSON instead of a formatted report
   --api-url <url>     PackageSafe API base URL (default: $PACKAGESAFE_API_URL or http://localhost:8000)
   -h, --help          Show this help message
@@ -16,7 +28,7 @@ Exit codes:
   1  verdict is "suspicious"/"investigate", package not found, or a scan error occurred`;
 
 function parseArgs(argv) {
-  const args = { packageName: null, json: false, apiUrl: null, help: false };
+  const args = { packageName: null, json: false, apiUrl: null, ecosystem: null, help: false };
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -26,6 +38,16 @@ function parseArgs(argv) {
       args.apiUrl = argv[++i];
       if (!args.apiUrl) {
         throw new Error("--api-url requires a value");
+      }
+    } else if (arg === "--ecosystem") {
+      args.ecosystem = argv[++i];
+      if (!args.ecosystem) {
+        throw new Error("--ecosystem requires a value");
+      }
+      if (!VALID_ECOSYSTEMS.includes(args.ecosystem)) {
+        throw new Error(
+          `Unknown ecosystem '${args.ecosystem}'. Supported: ${VALID_ECOSYSTEMS.join(", ")}`
+        );
       }
     } else if (arg === "-h" || arg === "--help") {
       args.help = true;
@@ -61,7 +83,9 @@ async function main() {
   }
 
   try {
-    const result = await scanPackage(args.packageName, { apiUrl: args.apiUrl });
+    const { ecosystem: sniffedEcosystem, packageIdentifier } = parsePackageArg(args.packageName);
+    const ecosystem = args.ecosystem || sniffedEcosystem;
+    const result = await scanPackage(packageIdentifier, { apiUrl: args.apiUrl, ecosystem });
 
     if (args.json) {
       console.log(JSON.stringify(result, null, 2));

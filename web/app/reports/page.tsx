@@ -110,7 +110,7 @@ export default function ReportsPage() {
                 <td className="px-4 py-3 font-mono text-muted">{entry.rank}</td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/p/${encodeURIComponent(entry.package)}`}
+                    href={`/p/npm/${encodeURIComponent(entry.package)}`}
                     className="font-mono font-semibold text-accent hover:underline"
                   >
                     {entry.package}

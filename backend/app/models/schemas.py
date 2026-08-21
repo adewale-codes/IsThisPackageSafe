@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 Severity = Literal["info", "warning", "danger"]
 Verdict = Literal["safe", "suspicious", "investigate"]
+Ecosystem = Literal["npm", "pypi", "maven"]
 
 
 class Maintainer(BaseModel):
@@ -23,6 +24,7 @@ class RepositoryInfo(BaseModel):
 
 
 class PackageMetadata(BaseModel):
+    ecosystem: Ecosystem = "npm"
     name: str
     description: Optional[str] = None
     latest_version: str
@@ -127,6 +129,7 @@ class VulnerabilityCheckStatus(BaseModel):
 
 
 class ScanResult(BaseModel):
+    ecosystem: Ecosystem
     package: str
     resolved_version: str
     risk_score: int

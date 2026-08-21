@@ -1,10 +1,15 @@
-"""Typosquat detection: Levenshtein distance against a seed list of popular packages."""
+"""Typosquat detection: Levenshtein distance against a seed list of popular
+packages, per ecosystem - npm's "react"/"lodash" mean nothing as a typosquat
+anchor for a PyPI or Maven scan, so each ecosystem gets its own seed list
+rather than sharing npm's."""
 
 from __future__ import annotations
 
 from typing import Optional
 
-POPULAR_PACKAGES = [
+from app.models.schemas import Ecosystem
+
+POPULAR_PACKAGES_NPM = [
     "react",
     "lodash",
     "express",
@@ -42,6 +47,63 @@ POPULAR_PACKAGES = [
     "puppeteer",
 ]
 
+POPULAR_PACKAGES_PYPI = [
+    "requests",
+    "numpy",
+    "pandas",
+    "flask",
+    "django",
+    "pytest",
+    "boto3",
+    "urllib3",
+    "click",
+    "pyyaml",
+    "setuptools",
+    "wheel",
+    "six",
+    "certifi",
+    "charset-normalizer",
+    "idna",
+    "pillow",
+    "cryptography",
+    "sqlalchemy",
+    "jinja2",
+    "markupsafe",
+    "protobuf",
+    "grpcio",
+    "scipy",
+    "matplotlib",
+]
+
+POPULAR_PACKAGES_MAVEN = [
+    "com.google.guava:guava",
+    "org.springframework:spring-core",
+    "org.springframework.boot:spring-boot-starter",
+    "junit:junit",
+    "org.junit.jupiter:junit-jupiter",
+    "com.fasterxml.jackson.core:jackson-databind",
+    "org.apache.commons:commons-lang3",
+    "commons-io:commons-io",
+    "org.slf4j:slf4j-api",
+    "ch.qos.logback:logback-classic",
+    "org.hibernate:hibernate-core",
+    "com.google.code.gson:gson",
+    "org.mockito:mockito-core",
+    "org.apache.httpcomponents:httpclient",
+    "io.netty:netty-all",
+    "org.projectlombok:lombok",
+    "com.squareup.okhttp3:okhttp",
+    "com.squareup.retrofit2:retrofit",
+    "org.apache.logging.log4j:log4j-core",
+    "mysql:mysql-connector-java",
+]
+
+_POPULAR_PACKAGES_BY_ECOSYSTEM: dict[Ecosystem, list[str]] = {
+    "npm": POPULAR_PACKAGES_NPM,
+    "pypi": POPULAR_PACKAGES_PYPI,
+    "maven": POPULAR_PACKAGES_MAVEN,
+}
+
 
 def levenshtein(a: str, b: str) -> int:
     if a == b:
@@ -64,13 +126,15 @@ def levenshtein(a: str, b: str) -> int:
     return previous_row[-1]
 
 
-def closest_popular_match(package_name: str, max_distance: int = 2) -> Optional[tuple[str, int]]:
+def closest_popular_match(
+    package_name: str, ecosystem: Ecosystem = "npm", max_distance: int = 2
+) -> Optional[tuple[str, int]]:
     """Return (popular_name, distance) for the closest popular package within
     max_distance, or None if the name is an exact match or no close match exists."""
     name = package_name.lower()
     best: Optional[tuple[str, int]] = None
 
-    for popular in POPULAR_PACKAGES:
+    for popular in _POPULAR_PACKAGES_BY_ECOSYSTEM.get(ecosystem, POPULAR_PACKAGES_NPM):
         if name == popular:
             return None
         distance = levenshtein(name, popular)

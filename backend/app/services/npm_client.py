@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-import re
 from datetime import datetime
 from typing import Any, Optional
 
 import httpx
 
-from app.models.schemas import DownloadStats, Maintainer, PackageMetadata, RepositoryInfo
+from app.models.schemas import DownloadStats, Maintainer, PackageMetadata
+from app.services.ecosystems.base import PackageNotFoundError as _PackageNotFoundError
+from app.services.repo_url import parse_github_repository
 
 REGISTRY_BASE = "https://registry.npmjs.org"
 DOWNLOADS_BASE = "https://api.npmjs.org/downloads/point"
@@ -17,12 +18,17 @@ DOWNLOADS_BASE = "https://api.npmjs.org/downloads/point"
 _TIME_META_KEYS = {"created", "modified"}
 
 
-class PackageNotFoundError(Exception):
-    """Raised when the requested package does not exist on the npm registry."""
+class PackageNotFoundError(_PackageNotFoundError):
+    """Raised when the requested package does not exist on the npm registry.
+
+    Subclasses the shared ecosystems.base error (so router/scanner can catch
+    just that one type) while keeping this name/signature for existing
+    importers (`from app.services.npm_client import PackageNotFoundError`).
+    """
 
     def __init__(self, package_name: str):
         self.package_name = package_name
-        super().__init__(f"Package '{package_name}' was not found on the npm registry")
+        super().__init__("npm", package_name)
 
 
 async def fetch_packument(client: httpx.AsyncClient, package_name: str) -> dict[str, Any]:
@@ -54,31 +60,14 @@ async def fetch_downloads(
         return DownloadStats(period=period, downloads=0, available=False)
 
 
-def _parse_repository(repository: Any) -> RepositoryInfo:
+def _repository_url(repository: Any) -> Optional[str]:
     if not repository:
-        return RepositoryInfo()
-
-    raw_url: Optional[str] = None
+        return None
     if isinstance(repository, dict):
-        raw_url = repository.get("url")
-    elif isinstance(repository, str):
-        raw_url = repository
-
-    if not raw_url:
-        return RepositoryInfo()
-
-    cleaned = raw_url.strip()
-    cleaned = re.sub(r"^git\+", "", cleaned)
-    cleaned = re.sub(r"^git://", "https://", cleaned)
-    cleaned = re.sub(r"^git@github\.com:", "https://github.com/", cleaned)
-    cleaned = re.sub(r"\.git$", "", cleaned)
-
-    match = re.search(r"github\.com[/:]([^/]+)/([^/#]+)", cleaned)
-    if not match:
-        return RepositoryInfo(raw_url=raw_url)
-
-    owner, repo = match.group(1), match.group(2)
-    return RepositoryInfo(raw_url=raw_url, owner=owner, repo=repo)
+        return repository.get("url")
+    if isinstance(repository, str):
+        return repository
+    return None
 
 
 def _parse_time(value: Optional[str]) -> Optional[datetime]:
@@ -145,6 +134,7 @@ def normalize_metadata(packument: dict[str, Any]) -> PackageMetadata:
     dist = latest_data.get("dist", {}) or {}
 
     return PackageMetadata(
+        ecosystem="npm",
         name=name,
         description=packument.get("description"),
         latest_version=latest_version,
@@ -154,7 +144,9 @@ def normalize_metadata(packument: dict[str, Any]) -> PackageMetadata:
         license=latest_data.get("license") if isinstance(latest_data.get("license"), str) else None,
         homepage=packument.get("homepage"),
         keywords=packument.get("keywords", []) or [],
-        repository=_parse_repository(latest_data.get("repository") or packument.get("repository")),
+        repository=parse_github_repository(
+            _repository_url(latest_data.get("repository") or packument.get("repository"))
+        ),
         maintainers=maintainers,
         dependencies=dependencies,
         dependency_count=len(dependencies),

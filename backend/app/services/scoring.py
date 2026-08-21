@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from app.models.schemas import DownloadStats, Finding, GithubSignals, PackageMetadata, Verdict
+from app.models.schemas import DownloadStats, Ecosystem, Finding, GithubSignals, PackageMetadata, Verdict
 from app.services import npm_client, typosquat
 
 MAX_SCORE = 100
@@ -114,8 +114,8 @@ def rule_install_scripts(metadata: PackageMetadata) -> Optional[Finding]:
     )
 
 
-def rule_typosquat(package_name: str) -> Optional[Finding]:
-    match = typosquat.closest_popular_match(package_name)
+def rule_typosquat(package_name: str, ecosystem: Ecosystem) -> Optional[Finding]:
+    match = typosquat.closest_popular_match(package_name, ecosystem)
     if match is None:
         return None
 
@@ -156,7 +156,7 @@ def rule_dependency_count(metadata: PackageMetadata) -> Optional[Finding]:
     return None
 
 
-def rule_repo_npm_mismatch(metadata: PackageMetadata, github: GithubSignals) -> list[Finding]:
+def rule_repo_activity_mismatch(metadata: PackageMetadata, github: GithubSignals) -> list[Finding]:
     findings: list[Finding] = []
 
     if not metadata.repository.owner or not metadata.repository.repo:
@@ -203,18 +203,18 @@ def rule_repo_npm_mismatch(metadata: PackageMetadata, github: GithubSignals) -> 
     ):
         latest_published = metadata.latest_published_at
         last_pushed = github.last_pushed_at
-        days_since_npm_publish = (_now() - latest_published).days
+        days_since_publish = (_now() - latest_published).days
         gap_days = (latest_published - last_pushed).days
 
-        if days_since_npm_publish < 30 and gap_days > 90:
+        if days_since_publish < 30 and gap_days > 90:
             findings.append(
                 Finding(
-                    id="repo_npm_activity_mismatch",
-                    label="npm release not reflected in repository activity",
+                    id="repo_activity_mismatch",
+                    label="Latest release not reflected in repository activity",
                     severity="warning",
                     points=15,
                     detail=(
-                        f"Latest npm version was published {days_since_npm_publish} day(s) ago, but the "
+                        f"Latest release was published {days_since_publish} day(s) ago, but the "
                         f"linked repository's last commit was {gap_days} day(s) before that publish."
                     ),
                 )
@@ -250,25 +250,33 @@ def rule_popularity_anomaly(downloads: DownloadStats, github: GithubSignals) -> 
 
 def run_heuristics(
     package_name: str,
-    packument: dict[str, Any],
     metadata: PackageMetadata,
     downloads: DownloadStats,
     github: GithubSignals,
+    ecosystem: Ecosystem = "npm",
+    packument: Optional[dict[str, Any]] = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
 
     for finding in (
         rule_package_age(metadata),
-        rule_maintainer_change(packument, metadata),
         rule_install_scripts(metadata),
-        rule_typosquat(package_name),
+        rule_typosquat(package_name, ecosystem),
         rule_dependency_count(metadata),
         rule_popularity_anomaly(downloads, github),
     ):
         if finding is not None:
             findings.append(finding)
 
-    findings.extend(rule_repo_npm_mismatch(metadata, github))
+    # Maintainer-takeover detection needs per-version maintainer history,
+    # which only npm's packument exposes (see typosquat/PyPI/Maven module
+    # docstrings) - N/A for the other ecosystems rather than a false signal.
+    if ecosystem == "npm" and packument is not None:
+        maintainer_finding = rule_maintainer_change(packument, metadata)
+        if maintainer_finding is not None:
+            findings.append(maintainer_finding)
+
+    findings.extend(rule_repo_activity_mismatch(metadata, github))
 
     return findings
 

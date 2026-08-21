@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import SearchBox from "@/components/SearchBox";
 import VerdictBadge from "@/components/VerdictBadge";
@@ -10,24 +11,50 @@ import {
   PackageNotFoundError,
   NetworkError,
   ApiError,
+  ECOSYSTEMS,
+  type Ecosystem,
   type ScanResult,
 } from "@/lib/scan";
 
 export const dynamic = "force-dynamic";
 
-function packageNameFromParams(params: { package: string }): string {
-  return params.package;
+type PageParams = { ecosystem: string; package: string };
+
+function isEcosystem(value: string): value is Ecosystem {
+  return (ECOSYSTEMS as string[]).includes(value);
+}
+
+/**
+ * This Next.js version (14.2.35) does not reliably percent-decode dynamic
+ * segment values for nested Page components - a segment like
+ * "com.google.guava%3Aguava" arrives with the %3A intact rather than
+ * decoded to ":" (confirmed via a minimal repro; Route Handlers at an
+ * identical path decode correctly, so this is scoped to Page param
+ * resolution specifically). Decoding here is a safe no-op for the common
+ * case (plain names never contain "%") and fixes Maven coordinates, which
+ * do.
+ */
+function decodeParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: { package: string };
+  params: PageParams;
 }): Promise<Metadata> {
-  const packageName = packageNameFromParams(params);
+  const ecosystem = decodeParam(params.ecosystem);
+  const packageName = decodeParam(params.package);
+  if (!isEcosystem(ecosystem)) {
+    return { title: "Unknown ecosystem" };
+  }
 
   try {
-    const result = await scanPackage(packageName);
+    const result = await scanPackage(packageName, ecosystem);
     const verdictLabel = result.verdict[0].toUpperCase() + result.verdict.slice(1);
     return {
       title: `${result.package} - ${verdictLabel} (${result.risk_score}/100)`,
@@ -36,7 +63,7 @@ export async function generateMetadata({
   } catch {
     return {
       title: `${packageName} - not found`,
-      description: `PackageSafe could not find '${packageName}' on the npm registry.`,
+      description: `PackageSafe could not find '${packageName}' in the ${ecosystem} registry.`,
     };
   }
 }
@@ -54,19 +81,19 @@ function formatDate(iso?: string | null): string | null {
   }
 }
 
-export default async function PackageResultPage({
-  params,
-}: {
-  params: { package: string };
-}) {
-  const packageName = packageNameFromParams(params);
+export default async function PackageResultPage({ params }: { params: PageParams }) {
+  const ecosystem = decodeParam(params.ecosystem);
+  const packageName = decodeParam(params.package);
+  if (!isEcosystem(ecosystem)) {
+    notFound();
+  }
 
   let result: ScanResult;
   try {
-    result = await scanPackage(packageName);
+    result = await scanPackage(packageName, ecosystem);
   } catch (err) {
     if (err instanceof PackageNotFoundError) {
-      return <NotFoundState packageName={packageName} />;
+      return <NotFoundState packageName={packageName} ecosystem={ecosystem} />;
     }
     if (err instanceof NetworkError || err instanceof ApiError) {
       return <ErrorState packageName={packageName} message={err.message} />;
@@ -82,6 +109,7 @@ export default async function PackageResultPage({
       <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
+            <p className="text-xs uppercase tracking-widest text-muted">{result.ecosystem}</p>
             <h1 className="font-mono text-2xl font-bold sm:text-3xl">
               {result.package}
               <span className="text-muted">@{result.resolved_version}</span>
@@ -199,14 +227,14 @@ export default async function PackageResultPage({
   );
 }
 
-function NotFoundState({ packageName }: { packageName: string }) {
+function NotFoundState({ packageName, ecosystem }: { packageName: string; ecosystem: Ecosystem }) {
   return (
     <main className="mx-auto flex max-w-xl flex-col items-center px-6 py-24 text-center">
       <span className="text-5xl">🔎</span>
       <h1 className="mt-4 text-xl font-bold">Package not found</h1>
       <p className="mt-2 text-sm text-muted">
-        <span className="font-mono text-foreground">{packageName}</span> was not found on the
-        npm registry. Double-check the spelling, or try another package below.
+        <span className="font-mono text-foreground">{packageName}</span> was not found in the{" "}
+        {ecosystem} registry. Double-check the spelling, or try another package below.
       </p>
       <div className="mt-8 w-full">
         <SearchBox />
