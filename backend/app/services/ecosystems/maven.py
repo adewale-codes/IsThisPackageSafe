@@ -35,7 +35,7 @@ from typing import Optional
 
 import httpx
 
-from app.models.schemas import DownloadStats, Maintainer, PackageMetadata
+from app.models.schemas import DownloadStats, Maintainer, PackageMetadata, VersionEntry
 from app.services.ecosystems.base import EcosystemClient, PackageNotFoundError
 from app.services.repo_url import parse_github_repository
 
@@ -111,7 +111,14 @@ def _pom_text(element: ET.Element, path: str) -> Optional[str]:
 
 class MavenClient(EcosystemClient):
     async def _search(
-        self, client: httpx.AsyncClient, group_id: str, artifact_id: str, *, sort: Optional[str] = None
+        self,
+        client: httpx.AsyncClient,
+        group_id: str,
+        artifact_id: str,
+        *,
+        sort: Optional[str] = None,
+        extra_query: str = "",
+        rows: int = 20,
     ) -> tuple[list[dict], int]:
         """Best-effort. Fails soft (empty docs, numFound=0) on any HTTP error
         or timeout rather than raising - callers must not distinguish
@@ -119,9 +126,9 @@ class MavenClient(EcosystemClient):
         maven-metadata.xml is the authoritative existence/version source
         anyway (see module docstring)."""
         params = {
-            "q": f"g:{group_id} AND a:{artifact_id}",
+            "q": f"g:{group_id} AND a:{artifact_id}{extra_query}",
             "core": "gav",
-            "rows": 20,  # a large rows value (tried 200) made search.maven.org time out
+            "rows": rows,  # a large rows value (tried 200) made search.maven.org time out
             "wt": "json",
         }
         if sort:
@@ -150,6 +157,18 @@ class MavenClient(EcosystemClient):
         oldest published version in one cheap call - no need to page
         through full version history just to find the minimum."""
         docs, _ = await self._search(client, group_id, artifact_id, sort="timestamp asc")
+        if not docs:
+            return None
+        ts = docs[0].get("timestamp")
+        return datetime.fromtimestamp(ts / 1000, tz=timezone.utc) if isinstance(ts, (int, float)) else None
+
+    async def _version_timestamp(
+        self, client: httpx.AsyncClient, group_id: str, artifact_id: str, version: str
+    ) -> Optional[datetime]:
+        """Best-effort publish date for one specific version (Phase 8 pinned
+        scans of a non-latest version) - a single narrow query is far cheaper
+        than paging through the whole search result set for one date."""
+        docs, _ = await self._search(client, group_id, artifact_id, extra_query=f" AND v:{version}", rows=1)
         if not docs:
             return None
         ts = docs[0].get("timestamp")
@@ -191,7 +210,7 @@ class MavenClient(EcosystemClient):
             return None
 
     async def fetch_metadata(
-        self, client: httpx.AsyncClient, package_identifier: str
+        self, client: httpx.AsyncClient, package_identifier: str, version: Optional[str] = None
     ) -> PackageMetadata:
         group_id, artifact_id = split_coordinate(package_identifier)
 
@@ -238,13 +257,34 @@ class MavenClient(EcosystemClient):
         if not latest_version:
             raise PackageNotFoundError("maven", package_identifier)
 
+        # version=None keeps existing behavior (target = true latest, its
+        # timestamp already resolved above). A specific version is checked
+        # against the known version list when available, and gets its own
+        # best-effort timestamp lookup (Phase 8) rather than reusing latest's.
+        if version is not None:
+            if versions and version not in versions:
+                raise PackageNotFoundError("maven", f"{package_identifier}@{version}")
+            target_version = version
+            target_published_at = (
+                latest_published_at
+                if version == latest_version
+                else await self._version_timestamp(client, group_id, artifact_id, version)
+            )
+        else:
+            target_version = latest_version
+            target_published_at = latest_published_at
+
         first_published_at = await self._oldest_published_at(client, group_id, artifact_id)
 
-        pom = await self._fetch_pom(client, group_id, artifact_id, latest_version)
+        pom = await self._fetch_pom(client, group_id, artifact_id, target_version)
+        if pom is None and version is not None and not versions:
+            # metadata.xml gave us no version list to check against, so the
+            # POM fetch itself is the only remaining existence signal.
+            raise PackageNotFoundError("maven", f"{package_identifier}@{version}")
 
         description = homepage = license_name = repo_source_url = None
         maintainers: list[Maintainer] = []
-        dependency_count = 0
+        dependencies: dict[str, str] = {}
 
         if pom is not None:
             description = _pom_text(pom, "description")
@@ -260,11 +300,19 @@ class MavenClient(EcosystemClient):
                 for dev in _pom_findall(pom, "developers/developer")
             ]
 
-            dependency_count = sum(
-                1
-                for dep in _pom_findall(pom, "dependencies/dependency")
-                if (_pom_text(dep, "scope") or "compile") != "test"
-            )
+            for dep in _pom_findall(pom, "dependencies/dependency"):
+                if (_pom_text(dep, "scope") or "compile") == "test":
+                    continue
+                dep_group = _pom_text(dep, "groupId")
+                dep_artifact = _pom_text(dep, "artifactId")
+                if not dep_group or not dep_artifact:
+                    continue
+                # <version> is frequently absent here, inherited from a
+                # parent POM/BOM this client deliberately doesn't resolve
+                # (see module docstring) - stored as "" rather than guessed;
+                # dependency_tree.py always scans a transitive dep at its own
+                # latest version regardless, so this is informational only.
+                dependencies[f"{dep_group}:{dep_artifact}"] = _pom_text(dep, "version") or ""
 
         return PackageMetadata(
             ecosystem="maven",
@@ -273,14 +321,14 @@ class MavenClient(EcosystemClient):
             latest_version=latest_version,
             version_count=len(versions) or 1,
             first_published_at=first_published_at,
-            latest_published_at=latest_published_at,
+            latest_published_at=target_published_at,
             license=license_name,
             homepage=homepage,
             keywords=[],
             repository=parse_github_repository(repo_source_url),
             maintainers=maintainers,
-            dependencies={},  # POM deps carry groupId:artifactId, not name:version - see dependency_count
-            dependency_count=dependency_count,
+            dependencies=dependencies,
+            dependency_count=len(dependencies),
             install_scripts={},  # N/A for Maven - see module docstring
             tarball_url=None,  # deliberately not wired to Phase 4 deep-scan this phase (JAR, not tarball)
             tarball_shasum=None,
@@ -300,6 +348,59 @@ class MavenClient(EcosystemClient):
                     return versions
         search_doc, _ = await self._latest_search_doc(client, group_id, artifact_id)
         return [search_doc["v"]] if search_doc and "v" in search_doc else []
+
+    async def fetch_version_history(
+        self, client: httpx.AsyncClient, package_identifier: str
+    ) -> list[VersionEntry]:
+        group_id, artifact_id = split_coordinate(package_identifier)
+        metadata_xml = await self._fetch_metadata_xml(client, group_id, artifact_id)
+
+        versions: list[str] = []
+        true_latest = ""
+        true_latest_published_at: Optional[datetime] = None
+        if metadata_xml is not None:
+            versioning = metadata_xml.find("versioning")
+            if versioning is not None:
+                versions = [v.text for v in versioning.findall("versions/version") if v.text]
+                true_latest = (
+                    (versioning.findtext("release") or "").strip()
+                    or (versioning.findtext("latest") or "").strip()
+                )
+                true_latest_published_at = _parse_maven_timestamp(versioning.findtext("lastUpdated"))
+
+        if not versions:
+            search_doc, _ = await self._latest_search_doc(client, group_id, artifact_id)
+            if search_doc and "v" in search_doc:
+                versions = [search_doc["v"]]
+        if not versions:
+            raise PackageNotFoundError("maven", package_identifier)
+
+        # Seed with the one date we're most confident about - metadata.xml's
+        # own <lastUpdated> for the true-latest release - since the search
+        # index has been observed lagging behind a freshly-published version
+        # (see module docstring); without this the newest release can end up
+        # missing a date entirely if search hasn't indexed it yet, and sort
+        # to the bottom of a "newest-first" list instead of the top.
+        timestamps: dict[str, datetime] = {}
+        if true_latest and true_latest_published_at:
+            timestamps[true_latest] = true_latest_published_at
+
+        # One best-effort, bounded search call to backfill as many of the
+        # rest as possible - search.maven.org's per-version timestamps are
+        # the only source for this (maven-metadata.xml has just one
+        # lastUpdated for the whole file), but it's unreliable (see module
+        # docstring), so a version this doesn't cover simply gets
+        # published_at=None rather than blocking on a query per version.
+        docs, _ = await self._search(client, group_id, artifact_id, sort="timestamp desc", rows=100)
+        for doc in docs:
+            v = doc.get("v")
+            ts = doc.get("timestamp")
+            if v and isinstance(ts, (int, float)) and v not in timestamps:
+                timestamps[v] = datetime.fromtimestamp(ts / 1000, tz=timezone.utc)
+
+        entries = [VersionEntry(version=v, published_at=timestamps.get(v)) for v in versions]
+        entries.sort(key=lambda e: e.published_at or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+        return entries
 
     async def fetch_downloads(
         self, client: httpx.AsyncClient, package_identifier: str

@@ -11,22 +11,24 @@ generic surface.
 
 from __future__ import annotations
 
+from typing import Optional
+
 import httpx
 
-from app.models.schemas import DownloadStats, PackageMetadata
+from app.models.schemas import DownloadStats, PackageMetadata, VersionEntry
 from app.services import npm_client
 from app.services.ecosystems.base import EcosystemClient, PackageNotFoundError
 
 
 class NpmClient(EcosystemClient):
     async def fetch_metadata(
-        self, client: httpx.AsyncClient, package_identifier: str
+        self, client: httpx.AsyncClient, package_identifier: str, version: Optional[str] = None
     ) -> PackageMetadata:
         try:
             packument = await npm_client.fetch_packument(client, package_identifier)
+            return npm_client.normalize_metadata(packument, version)
         except npm_client.PackageNotFoundError as exc:
             raise PackageNotFoundError("npm", package_identifier) from exc
-        return npm_client.normalize_metadata(packument)
 
     async def fetch_versions(
         self, client: httpx.AsyncClient, package_identifier: str
@@ -36,6 +38,16 @@ class NpmClient(EcosystemClient):
         except npm_client.PackageNotFoundError as exc:
             raise PackageNotFoundError("npm", package_identifier) from exc
         return [version for version, _ in npm_client.get_ordered_version_history(packument)]
+
+    async def fetch_version_history(
+        self, client: httpx.AsyncClient, package_identifier: str
+    ) -> list[VersionEntry]:
+        try:
+            packument = await npm_client.fetch_packument(client, package_identifier)
+        except npm_client.PackageNotFoundError as exc:
+            raise PackageNotFoundError("npm", package_identifier) from exc
+        history = npm_client.get_ordered_version_history(packument)  # oldest-first
+        return [VersionEntry(version=v, published_at=t) for v, t in reversed(history)]
 
     async def fetch_downloads(
         self, client: httpx.AsyncClient, package_identifier: str

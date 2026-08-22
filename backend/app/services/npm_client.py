@@ -105,17 +105,27 @@ def get_maintainers_for_version(packument: dict[str, Any], version: str) -> list
     return sorted(names)
 
 
-def normalize_metadata(packument: dict[str, Any]) -> PackageMetadata:
+def normalize_metadata(packument: dict[str, Any], version: Optional[str] = None) -> PackageMetadata:
+    """version=None resolves to dist-tags.latest (unchanged Phase 1-6
+    behavior). A specific version pins every version-sensitive field
+    (dependencies, install_scripts, license, tarball info, publish date) to
+    that version's own packument entry - latest_version itself always stays
+    the true current-latest, as informational context (Phase 8)."""
     name = packument.get("name", "")
     dist_tags = packument.get("dist-tags", {})
     latest_version = dist_tags.get("latest", "")
 
     versions: dict[str, Any] = packument.get("versions", {})
-    latest_data = versions.get(latest_version, {})
+
+    if version is not None and version not in versions:
+        raise PackageNotFoundError(f"{name or packument.get('name', '?')}@{version}")
+
+    target_version = version or latest_version
+    latest_data = versions.get(target_version, {})
 
     time_map: dict[str, str] = packument.get("time", {})
     first_published_at = _parse_time(time_map.get("created"))
-    latest_published_at = _parse_time(time_map.get(latest_version) or time_map.get("modified"))
+    latest_published_at = _parse_time(time_map.get(target_version) or time_map.get("modified"))
 
     maintainers_raw = packument.get("maintainers", [])
     maintainers = [

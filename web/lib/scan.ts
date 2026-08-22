@@ -124,6 +124,32 @@ export interface ScanResult {
   vulnerability_check: VulnerabilityCheckStatus;
 }
 
+// Phase 8: version browsing + transitive dependency analysis.
+
+export interface VersionEntry {
+  version: string;
+  published_at?: string | null;
+}
+
+export interface FlaggedDependency {
+  ecosystem: Ecosystem;
+  package: string;
+  version: string;
+  path: string[];
+  risk_score: number;
+  verdict: Verdict;
+  findings: Finding[];
+  vulnerabilities: VulnerabilityFinding[];
+}
+
+export interface DependencyTree {
+  root: ScanResult;
+  flagged_dependencies: FlaggedDependency[];
+  total_scanned: number;
+  max_depth_reached: boolean;
+  node_cap_reached: boolean;
+}
+
 const DEFAULT_API_URL = "http://localhost:8000";
 
 export class PackageNotFoundError extends Error {
@@ -154,26 +180,39 @@ export function resolveApiUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
-export function buildScanUrl(packageName: string, ecosystem: Ecosystem = DEFAULT_ECOSYSTEM): string {
-  const encodedPath = packageName
+export interface ScanOptions {
+  version?: string | null;
+  includeTree?: boolean;
+  maxDepth?: number;
+  nodeCap?: number;
+}
+
+function encodedPackagePath(packageName: string): string {
+  return packageName
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `${resolveApiUrl()}/scan/${ecosystem}/${encodedPath}`;
 }
 
-/**
- * Fetches a live scan from the API. Wrapped in React's cache() so a single
- * request (page + generateMetadata + any other callers) only hits the API
- * once - there is no server-side result caching beyond that, matching
- * Phase 1/2's "every load is a live scan" behavior.
- */
-export const scanPackage = cache(async (
+export function buildScanUrl(
   packageName: string,
-  ecosystem: Ecosystem = DEFAULT_ECOSYSTEM
-): Promise<ScanResult> => {
-  const url = buildScanUrl(packageName, ecosystem);
+  ecosystem: Ecosystem = DEFAULT_ECOSYSTEM,
+  options: ScanOptions = {}
+): string {
+  const params = new URLSearchParams();
+  if (options.version) params.set("version", options.version);
+  if (options.includeTree) params.set("include_tree", "true");
+  if (options.maxDepth != null) params.set("max_depth", String(options.maxDepth));
+  if (options.nodeCap != null) params.set("node_cap", String(options.nodeCap));
+  const query = params.toString();
+  return `${resolveApiUrl()}/scan/${ecosystem}/${encodedPackagePath(packageName)}${query ? `?${query}` : ""}`;
+}
 
+export function buildVersionsUrl(packageName: string, ecosystem: Ecosystem = DEFAULT_ECOSYSTEM): string {
+  return `${resolveApiUrl()}/versions/${ecosystem}/${encodedPackagePath(packageName)}`;
+}
+
+async function fetchJson(url: string, packageName: string, ecosystem: Ecosystem, version?: string | null) {
   let response: Response;
   try {
     response = await fetch(url, { cache: "no-store" });
@@ -192,8 +231,9 @@ export const scanPackage = cache(async (
     } catch {
       // fall through to default message
     }
+    const displayName = version ? `${packageName}@${version}` : packageName;
     throw new PackageNotFoundError(
-      detail || `Package '${packageName}' was not found in the ${ecosystem} registry.`
+      detail || `Package '${displayName}' was not found in the ${ecosystem} registry.`
     );
   }
 
@@ -212,4 +252,47 @@ export const scanPackage = cache(async (
   }
 
   return response.json();
+}
+
+/**
+ * Fetches a live scan from the API - optionally version-pinned and/or with
+ * a dependency tree (Phase 8). Wrapped in React's cache() so a single
+ * request (page + generateMetadata + any other callers) only hits the API
+ * once per distinct argument set - there is no server-side result caching
+ * beyond that, matching Phase 1/2's "every load is a live scan" behavior.
+ */
+export const scanPackage = cache(async (
+  packageName: string,
+  ecosystem: Ecosystem = DEFAULT_ECOSYSTEM,
+  options: ScanOptions = {}
+): Promise<ScanResult> => {
+  const url = buildScanUrl(packageName, ecosystem, options);
+  return fetchJson(url, packageName, ecosystem, options.version) as Promise<ScanResult>;
 });
+
+/**
+ * Fetches a scan with its full dependency tree (Phase 8). A separate
+ * function (rather than overloading scanPackage's return type) so callers -
+ * and TypeScript - always know statically which shape they're getting.
+ */
+export const scanPackageWithTree = cache(async (
+  packageName: string,
+  ecosystem: Ecosystem = DEFAULT_ECOSYSTEM,
+  options: Omit<ScanOptions, "includeTree"> = {}
+): Promise<DependencyTree> => {
+  const url = buildScanUrl(packageName, ecosystem, { ...options, includeTree: true });
+  return fetchJson(url, packageName, ecosystem, options.version) as Promise<DependencyTree>;
+});
+
+/**
+ * Full version history for a package, newest-first (Phase 8). Not wrapped
+ * in cache() like scanPackage - it's cheap, and each page that wants it
+ * calls it at most once, so per-request de-dup isn't needed.
+ */
+export async function fetchVersions(
+  packageName: string,
+  ecosystem: Ecosystem = DEFAULT_ECOSYSTEM
+): Promise<VersionEntry[]> {
+  const url = buildVersionsUrl(packageName, ecosystem);
+  return fetchJson(url, packageName, ecosystem) as Promise<VersionEntry[]>;
+}

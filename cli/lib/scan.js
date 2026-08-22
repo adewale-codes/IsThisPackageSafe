@@ -52,21 +52,53 @@ function parsePackageArg(rawArg) {
   return { ecosystem: DEFAULT_ECOSYSTEM, packageIdentifier: rawArg };
 }
 
-function buildScanUrl(apiUrl, ecosystem, packageIdentifier) {
+/**
+ * Splits a trailing "@version" off a package identifier (Phase 8), e.g.
+ * "axios@1.2.0" -> {packageIdentifier: "axios", version: "1.2.0"} or
+ * "@babel/core@7.20.0" -> {packageIdentifier: "@babel/core", version: "7.20.0"}.
+ * A scoped npm package's leading '@' is part of the name, not a version
+ * separator - only a LATER '@' marks a pinned version. No '@' at all means
+ * unversioned (defaults to latest, unchanged Phase 1-7 behavior).
+ */
+function parsePackageVersion(raw) {
+  const searchFrom = raw.startsWith("@") ? 1 : 0;
+  const at = raw.indexOf("@", searchFrom);
+  if (at === -1) return { packageIdentifier: raw, version: null };
+  const version = raw.slice(at + 1);
+  return { packageIdentifier: raw.slice(0, at), version: version || null };
+}
+
+function buildScanUrl(apiUrl, ecosystem, packageIdentifier, options = {}) {
+  const { version, includeTree, maxDepth, nodeCap } = options;
   const encodedPath = packageIdentifier
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `${apiUrl}/scan/${ecosystem}/${encodedPath}`;
+  const params = [];
+  if (version) params.push(`version=${encodeURIComponent(version)}`);
+  if (includeTree) params.push("include_tree=true");
+  if (maxDepth != null) params.push(`max_depth=${encodeURIComponent(maxDepth)}`);
+  if (nodeCap != null) params.push(`node_cap=${encodeURIComponent(nodeCap)}`);
+  const query = params.length ? `?${params.join("&")}` : "";
+  return `${apiUrl}/scan/${ecosystem}/${encodedPath}${query}`;
 }
 
 /**
- * Calls the PackageSafe API's GET /scan/{ecosystem}/{package} endpoint.
- * @returns {Promise<object>} the parsed ScanResult
+ * Calls the PackageSafe API's GET /scan/{ecosystem}/{package} endpoint
+ * (optionally version-pinned and/or with a dependency tree - Phase 8).
+ * @returns {Promise<object>} the parsed ScanResult, or DependencyTree when includeTree is set
  */
-async function scanPackage(packageName, { apiUrl, ecosystem = DEFAULT_ECOSYSTEM } = {}) {
+async function scanPackage(
+  packageName,
+  { apiUrl, ecosystem = DEFAULT_ECOSYSTEM, version, includeTree, maxDepth, nodeCap } = {}
+) {
   const resolvedApiUrl = resolveApiUrl(apiUrl);
-  const url = buildScanUrl(resolvedApiUrl, ecosystem, packageName);
+  const url = buildScanUrl(resolvedApiUrl, ecosystem, packageName, {
+    version,
+    includeTree,
+    maxDepth,
+    nodeCap,
+  });
 
   let response;
   try {
@@ -111,6 +143,7 @@ module.exports = {
   resolveApiUrl,
   buildScanUrl,
   parsePackageArg,
+  parsePackageVersion,
   PackageNotFoundError,
   ApiError,
   NetworkError,

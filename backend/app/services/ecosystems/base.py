@@ -19,10 +19,11 @@ fewer signals doesn't look artificially safer than one with more.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import httpx
 
-from app.models.schemas import DownloadStats, PackageMetadata
+from app.models.schemas import DownloadStats, PackageMetadata, VersionEntry
 
 
 class PackageNotFoundError(Exception):
@@ -45,9 +46,18 @@ class EcosystemClient(ABC):
 
     @abstractmethod
     async def fetch_metadata(
-        self, client: httpx.AsyncClient, package_identifier: str
+        self, client: httpx.AsyncClient, package_identifier: str, version: Optional[str] = None
     ) -> PackageMetadata:
-        """Raises PackageNotFoundError if the package/coordinate doesn't exist."""
+        """version=None resolves to latest (existing Phase 1-7 behavior).
+        When a specific version is given (Phase 8), every version-sensitive
+        field (dependencies, install_scripts, license, tarball info, the
+        publish date) must describe *that* version, not always-latest -
+        that's what makes a pinned scan actually pinned. latest_version
+        stays the true current-latest regardless, as informational context.
+
+        Raises PackageNotFoundError if the package/coordinate doesn't exist,
+        or if a specific version is requested that doesn't exist for it.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -56,6 +66,15 @@ class EcosystemClient(ABC):
     ) -> list[str]:
         """All known version strings, any order. Used for version-history-
         shaped heuristics; ecosystems with no such data return []."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def fetch_version_history(
+        self, client: httpx.AsyncClient, package_identifier: str
+    ) -> list[VersionEntry]:
+        """All known versions with publish date where available (Phase 8),
+        newest-first. A version whose publish date isn't obtainable is still
+        included, with published_at=None - never dropped, never guessed."""
         raise NotImplementedError
 
     @abstractmethod

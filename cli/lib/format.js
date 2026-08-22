@@ -121,4 +121,45 @@ function formatVulnerabilities(result) {
   return lines.join("\n");
 }
 
-module.exports = { formatReport, colorEnabled };
+// Phase 8: dependency tree - the root package's own report, followed by a
+// flat list of transitive dependencies that came back flagged (clean ones
+// are never included - see dependency_tree.py). Deliberately plain/compact;
+// Phase 11 handles visual polish.
+function formatTreeReport(tree) {
+  const lines = [formatReport(tree.root), ""];
+
+  const caveats = [];
+  if (tree.max_depth_reached) caveats.push("depth limit reached - graph may go deeper");
+  if (tree.node_cap_reached) caveats.push("node limit reached - graph may be larger");
+  const caveatNote = caveats.length ? paint(` (${caveats.join("; ")})`, "dim") : "";
+
+  lines.push(paint(`Dependency tree: ${tree.total_scanned} package(s) scanned`, "bold") + caveatNote);
+  lines.push("");
+
+  const flagged = tree.flagged_dependencies || [];
+  if (flagged.length === 0) {
+    lines.push(paint("No flagged transitive dependencies found.", "dim"));
+    return lines.join("\n");
+  }
+
+  lines.push(paint(`Flagged transitive dependencies (${flagged.length}):`, "bold"));
+  for (const dep of flagged) {
+    const verdictMeta = VERDICT_META[dep.verdict] || VERDICT_META.investigate;
+    lines.push(
+      `  ${verdictMeta.icon} ${paint(`${dep.package}@${dep.version}`, "bold")} ` +
+        paint(`(risk ${dep.risk_score}/100)`, "dim")
+    );
+    lines.push(paint(`     path: ${dep.path.join(" -> ")}`, "dim"));
+    for (const finding of dep.findings || []) {
+      lines.push(`     - ${finding.label}`);
+    }
+    for (const vuln of dep.vulnerabilities || []) {
+      const sevMeta = VULN_SEVERITY_META[vuln.severity] || VULN_SEVERITY_META.unknown;
+      lines.push(`     - ${paint(vuln.id, sevMeta.color)} [${vuln.severity}]`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+module.exports = { formatReport, formatTreeReport, colorEnabled };

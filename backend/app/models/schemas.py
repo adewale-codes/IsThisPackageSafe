@@ -143,3 +143,39 @@ class ScanResult(BaseModel):
     deep_scan: DeepScanInfo
     vulnerabilities: list[VulnerabilityFinding]
     vulnerability_check: VulnerabilityCheckStatus
+
+
+class VersionEntry(BaseModel):
+    """One entry in a package's version history (Phase 8)."""
+
+    version: str
+    published_at: Optional[datetime] = None
+
+
+class FlaggedDependency(BaseModel):
+    """A transitive dependency (Phase 8) that came back with at least one
+    Finding and/or known vulnerability from its lightweight scan (heuristics
+    + OSV only - no deep-scan; see dependency_tree.py). Clean dependencies
+    are never included here - only ones worth a user's attention."""
+
+    ecosystem: Ecosystem
+    package: str
+    version: str
+    path: list[str]
+    risk_score: int
+    verdict: Verdict
+    findings: list[Finding]
+    vulnerabilities: list[VulnerabilityFinding]
+
+
+class DependencyTree(BaseModel):
+    """Phase 8: root package's own full scan, plus every transitive
+    dependency (recursively, up to a depth cap) that came back flagged.
+    max_depth_reached / node_cap_reached tell the caller honestly whether
+    the graph was fully explored or cut short by a safety guard."""
+
+    root: ScanResult
+    flagged_dependencies: list[FlaggedDependency]
+    total_scanned: int
+    max_depth_reached: bool
+    node_cap_reached: bool
