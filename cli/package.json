@@ -1,17 +1,52 @@
 {
-  "name": "packagesafe",
+  "name": "safecheck",
   "version": "0.1.0",
-  "description": "npm package risk-scanning CLI - thin client over the PackageSafe API",
+  "description": "Supply-chain risk scanner for npm, PyPI, and Maven packages - typosquats, maintainer takeovers, install-script surprises, known CVEs, and repo-wide dependency scanning. CLI for PackageSafe.",
+  "keywords": [
+    "security",
+    "supply-chain",
+    "vulnerability",
+    "audit",
+    "npm",
+    "pypi",
+    "maven",
+    "cli",
+    "cve",
+    "osv"
+  ],
+  "homepage": "https://packagesafe.dev/cli",
+  "bugs": {
+    "url": "https://github.com/adewale-codes/IsThisPackageSafe/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adewale-codes/IsThisPackageSafe.git",
+    "directory": "cli"
+  },
+  "license": "MIT",
+  "author": "PackageSafe",
   "bin": {
-    "packagesafe": "bin/cli.js"
+    "safecheck": "bin/cli.js"
   },
   "files": [
     "bin",
     "lib",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint bin lib test"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5"
+  },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ]
 }

@@ -13,13 +13,15 @@ const {
 const { discoverManifests, hasManifests, scanRepo } = require("../lib/repo");
 const { formatReport, formatTreeReport, formatRepoReport } = require("../lib/format");
 
-const USAGE = `Usage: packagesafe <package-name>[@version] [options]
-       packagesafe scan [path]
+const { version: VERSION } = require("../package.json");
+
+const USAGE = `Usage: safecheck <package-name>[@version] [options]
+       safecheck scan [path]
 
 With no arguments, run inside a directory containing a manifest (package.json,
-requirements.txt, pyproject.toml, pom.xml), PackageSafe auto-detects it and
+requirements.txt, pyproject.toml, pom.xml), safecheck auto-detects it and
 scans the whole repo - direct and transitive dependencies, across every
-manifest found. "packagesafe scan [path]" does the same for a path other
+manifest found. "safecheck scan [path]" does the same for a path other
 than the current directory.
 
 A package name may be prefixed with an ecosystem and a colon to scan a
@@ -37,6 +39,7 @@ Options:
   --json              Print raw JSON instead of a formatted report
   --api-url <url>     PackageSafe API base URL (default: $PACKAGESAFE_API_URL or http://localhost:8000)
   -h, --help          Show this help message
+  -v, --version       Show the installed safecheck version
 
 Exit codes:
   0  verdict is "safe" (worst verdict across the repo, for a repo scan)
@@ -52,6 +55,7 @@ function parseArgs(argv) {
     maxDepth: null,
     nodeCap: null,
     help: false,
+    version: false,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -60,6 +64,8 @@ function parseArgs(argv) {
       args.json = true;
     } else if (arg === "--tree") {
       args.tree = true;
+    } else if (arg === "-v" || arg === "--version") {
+      args.version = true;
     } else if (arg === "--api-url") {
       args.apiUrl = argv[++i];
       if (!args.apiUrl) {
@@ -167,6 +173,11 @@ async function main() {
     console.error(`Error: ${err.message}\n`);
     console.error(USAGE);
     process.exit(1);
+  }
+
+  if (args.version) {
+    console.log(VERSION);
+    process.exit(0);
   }
 
   if (args.help) {

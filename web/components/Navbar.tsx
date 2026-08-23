@@ -7,7 +7,14 @@ export default function Navbar() {
         <Link href="/" className="text-sm font-semibold tracking-tight text-foreground">
           Package<span className="text-accent">Safe</span>
         </Link>
-        <span className="text-xs uppercase tracking-widest text-muted">npm risk scanner</span>
+        <div className="flex items-center gap-4">
+          <Link href="/cli" className="text-xs uppercase tracking-widest text-muted hover:text-accent">
+            CLI
+          </Link>
+          <span className="hidden text-xs uppercase tracking-widest text-muted sm:inline">
+            npm risk scanner
+          </span>
+        </div>
       </div>
     </nav>
   );
