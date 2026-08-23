@@ -162,4 +162,68 @@ function formatTreeReport(tree) {
   return lines.join("\n");
 }
 
-module.exports = { formatReport, formatTreeReport, colorEnabled };
+// Phase 9: repo-wide scan report - summary stats, the manifests found, then
+// every scanned package worst-first (already sorted by the backend).
+function formatRepoReport(report) {
+  const lines = [];
+
+  lines.push(
+    paint(
+      `📦 Repo scan: ${report.total_scanned} package(s) scanned ` +
+        `(${report.direct_count} direct, ${report.transitive_count} transitive)`,
+      "bold"
+    )
+  );
+
+  const sev = report.vulnerability_severity_counts || {};
+  const sevParts = ["critical", "high", "medium", "low", "unknown"]
+    .filter((s) => sev[s])
+    .map((s) => `${sev[s]} ${s}`);
+  lines.push(
+    `${report.flagged_count} flagged by supply-chain heuristics · ` +
+      `${report.vulnerable_count} with known vulnerabilities` +
+      (sevParts.length ? paint(` (${sevParts.join(", ")})`, "dim") : "")
+  );
+
+  const caveats = [];
+  if (report.max_depth_reached) caveats.push("depth limit reached on some branches");
+  if (report.node_cap_reached) caveats.push("node limit reached - graph may be larger");
+  if (caveats.length) lines.push(paint(`(${caveats.join("; ")})`, "dim"));
+
+  lines.push("");
+  lines.push(paint("Manifests:", "bold"));
+  for (const m of report.manifests) {
+    const count = m.direct_dependency_count ? ` (${m.direct_dependency_count} direct dep(s))` : "";
+    lines.push(paint(`  ${m.path}${count}`, "dim"));
+  }
+
+  lines.push("");
+  if (report.packages.length === 0) {
+    lines.push(paint("No dependencies found.", "dim"));
+    return lines.join("\n");
+  }
+
+  lines.push(paint("Packages (worst-first):", "bold"));
+  for (const pkg of report.packages) {
+    const s = pkg.scan;
+    const verdictMeta = VERDICT_META[s.verdict] || VERDICT_META.investigate;
+    const origin = pkg.is_direct ? "direct" : `transitive via ${pkg.pulled_in_by}`;
+    lines.push(
+      `  ${verdictMeta.icon} ${paint(`${s.ecosystem}:${s.package}@${s.resolved_version}`, "bold")} ` +
+        paint(`risk ${s.risk_score}/100`, "dim") +
+        ` - ${origin}` +
+        paint(` [${pkg.resolution_method}]`, "dim")
+    );
+    for (const finding of s.findings || []) {
+      lines.push(`     - ${finding.label}`);
+    }
+    for (const vuln of s.vulnerabilities || []) {
+      const sevMeta = VULN_SEVERITY_META[vuln.severity] || VULN_SEVERITY_META.unknown;
+      lines.push(`     - ${paint(vuln.id, sevMeta.color)} [${vuln.severity}]`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+module.exports = { formatReport, formatTreeReport, formatRepoReport, colorEnabled };

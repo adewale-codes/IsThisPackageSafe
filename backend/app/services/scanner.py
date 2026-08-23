@@ -64,12 +64,22 @@ async def _scan_with_client(
     version: Optional[str] = None,
     *,
     enable_deep_scan: bool = True,
+    skip_vuln_check: bool = False,
 ) -> ScanResult:
     """The actual orchestration, over a caller-supplied httpx.AsyncClient so
     a Phase 8 dependency-tree build can share one connection pool across
     every node instead of opening a new client per package. scan_package()
     below is the single-scan entry point that owns its own client; this is
-    also what dependency_tree.py calls directly for each node."""
+    also what dependency_tree.py calls directly for each node.
+
+    skip_vuln_check exists for Phase 9's repo scanner: checking OSV.dev one
+    package at a time doesn't scale to a repo's full dependency count, so
+    repo_scan.py instead batches every package's vulnerability lookup into
+    one (or a few) check_vulnerabilities_batch() calls after every node has
+    been scanned, then patches the real result in via _apply_vulnerabilities
+    below. A skipped check is marked "pending", never "completed" - it must
+    never be mistaken for a real clean result if something goes wrong before
+    the patch happens."""
     packument: Optional[dict[str, Any]] = None
     if ecosystem == "npm":
         metadata, packument = await _fetch_npm(client, package_identifier, version)
@@ -88,12 +98,15 @@ async def _scan_with_client(
     github = await github_client.fetch_github_signals(
         client, metadata.repository.owner, metadata.repository.repo
     )
-    # Run for every scan, unconditionally - unlike the deep-scan LLM layer,
-    # CVE lookups are cheap and fast enough not to gate behind a heuristics
-    # threshold.
-    vulnerabilities, vulnerability_check = await _check_vulnerabilities_safely(
-        client, package_identifier, resolved_version, ecosystem
-    )
+    if skip_vuln_check:
+        vulnerabilities, vulnerability_check = [], VulnerabilityCheckStatus(status="pending")
+    else:
+        # Run for every scan, unconditionally - unlike the deep-scan LLM
+        # layer, CVE lookups are cheap and fast enough not to gate behind a
+        # heuristics threshold.
+        vulnerabilities, vulnerability_check = await _check_vulnerabilities_safely(
+            client, package_identifier, resolved_version, ecosystem
+        )
 
     findings = scoring.run_heuristics(
         package_identifier, metadata, downloads, github, ecosystem=ecosystem, packument=packument
@@ -161,3 +174,28 @@ async def scan_package(
 ) -> ScanResult:
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT) as client:
         return await _scan_with_client(client, ecosystem, package_identifier, version)
+
+
+def apply_vulnerabilities(
+    result: ScanResult,
+    vulnerabilities: list[VulnerabilityFinding],
+    check: VulnerabilityCheckStatus,
+) -> ScanResult:
+    """Phase 9: patches a skip_vuln_check=True result with the real
+    vulnerability data (from a batch OSV lookup) and recomputes every score
+    field that depends on it - vulnerability_score, risk_score, and verdict
+    all need to reflect the patched-in data, not the empty placeholder the
+    scan itself produced."""
+    vulnerability_score = min(sum(v.points for v in vulnerabilities), 100)
+    deep_scan_points = result.deep_scan.finding.points if result.deep_scan.finding else 0
+    risk_score = min(result.heuristics_score + vulnerability_score + deep_scan_points, 100)
+    verdict = scoring.compute_verdict(risk_score)
+    return result.model_copy(
+        update={
+            "vulnerabilities": vulnerabilities,
+            "vulnerability_check": check,
+            "vulnerability_score": vulnerability_score,
+            "risk_score": risk_score,
+            "verdict": verdict,
+        }
+    )

@@ -42,12 +42,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 import httpx
 
 from app.models.schemas import DependencyTree, Ecosystem, FlaggedDependency, ScanResult
 from app.services import ecosystems, scanner
+
+OnVisit = Callable[[str, ScanResult, list[str]], None]
 
 logger = logging.getLogger(__name__)
 
@@ -85,16 +87,27 @@ def _is_flagged(result: ScanResult) -> bool:
 
 
 async def _scan_dependency(
-    client: httpx.AsyncClient, ecosystem: Ecosystem, name: str
+    client: httpx.AsyncClient,
+    ecosystem: Ecosystem,
+    name: str,
+    version: Optional[str] = None,
+    *,
+    skip_vuln_check: bool = False,
 ) -> Optional[ScanResult]:
-    """Scan one transitive dependency at its own latest version, heuristics
-    + OSV only (no deep-scan). Returns None if it couldn't be resolved at
-    all (e.g. a manifest references a package that's been unpublished, or a
-    private/internal package not in the public registry) - a single
-    unresolvable transitive dependency must not crash the whole tree build."""
+    """Scan one transitive dependency, heuristics + OSV only (no deep-scan).
+    version=None (the Phase 8 default) scans at that dependency's own latest
+    published version - see the module docstring for why. Phase 9's repo
+    scanner passes a resolved version for the *direct* dependencies it seeds
+    (it knows those precisely from a lockfile/manifest) but still leaves
+    version=None once walking into transitives, same as Phase 8.
+
+    Returns None if the package couldn't be resolved at all (e.g. a
+    manifest references a package that's been unpublished, or a private/
+    internal package not in the public registry) - a single unresolvable
+    dependency must not crash the whole tree/repo scan."""
     try:
         return await scanner._scan_with_client(
-            client, ecosystem, name, None, enable_deep_scan=False
+            client, ecosystem, name, version, enable_deep_scan=False, skip_vuln_check=skip_vuln_check
         )
     except ecosystems.PackageNotFoundError:
         return None
@@ -114,9 +127,21 @@ async def _walk(
     path: list[str],
     max_depth: int,
     state: _TreeState,
+    *,
+    skip_vuln_check: bool = False,
+    on_visit: Optional[OnVisit] = None,
 ) -> None:
     """Precondition: 1 <= depth <= max_depth (the caller never recurses
-    past max_depth - see the `depth >= max_depth` check at the bottom)."""
+    past max_depth - see the `depth >= max_depth` check at the bottom).
+
+    on_visit, if given, is called for *every* node reached (flagged or not)
+    instead of this function's own flagged-only bookkeeping below - Phase
+    9's repo scanner needs full per-package provenance (direct/transitive,
+    which direct dependency pulled it in), not just the flagged subset
+    Phase 8's own DependencyTree output needs. skip_vuln_check similarly
+    exists for Phase 9 (see scanner._scan_with_client) - Phase 8's own
+    build_dependency_tree() below never sets either, so its existing
+    behavior is completely unchanged."""
     key = (ecosystem, name.lower())
 
     if key not in state.memo:
@@ -124,7 +149,9 @@ async def _walk(
             state.node_cap_reached = True
             return
         state.scanned_count += 1
-        state.memo[key] = asyncio.ensure_future(_scan_dependency(client, ecosystem, name))
+        state.memo[key] = asyncio.ensure_future(
+            _scan_dependency(client, ecosystem, name, None, skip_vuln_check=skip_vuln_check)
+        )
 
     result = await state.memo[key]
     if result is None:
@@ -132,7 +159,9 @@ async def _walk(
 
     current_path = path + [name]
 
-    if _is_flagged(result) and result.package not in state.flagged_names:
+    if on_visit is not None:
+        on_visit(name, result, current_path)
+    elif _is_flagged(result) and result.package not in state.flagged_names:
         state.flagged_names.add(result.package)
         state.flagged.append(
             FlaggedDependency(
@@ -158,7 +187,17 @@ async def _walk(
 
     await asyncio.gather(
         *(
-            _walk(client, ecosystem, child, depth + 1, current_path, max_depth, state)
+            _walk(
+                client,
+                ecosystem,
+                child,
+                depth + 1,
+                current_path,
+                max_depth,
+                state,
+                skip_vuln_check=skip_vuln_check,
+                on_visit=on_visit,
+            )
             for child in children
         )
     )

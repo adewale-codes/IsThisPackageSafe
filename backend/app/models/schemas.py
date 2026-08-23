@@ -116,13 +116,19 @@ class VulnerabilityFinding(BaseModel):
     points: int = 0
 
 
-VulnCheckStatusValue = Literal["completed", "failed"]
+VulnCheckStatusValue = Literal["completed", "failed", "pending"]
 
 
 class VulnerabilityCheckStatus(BaseModel):
     """Whether the OSV.dev lookup itself succeeded - independent of whether
     any vulnerabilities were found. Mirrors DeepScanFinding's fail-visibly
-    pattern: a failed check must never look identical to a clean result."""
+    pattern: a failed check must never look identical to a clean result.
+
+    "pending" (Phase 9) marks a result whose vulnerability check was
+    deliberately deferred to a later batch OSV lookup (see
+    scanner.py's skip_vuln_check) - a transient internal state that should
+    always be patched to "completed"/"failed" before a result is returned
+    to any caller outside repo_scan.py's own pipeline."""
 
     status: VulnCheckStatusValue
     note: Optional[str] = None
@@ -177,5 +183,65 @@ class DependencyTree(BaseModel):
     root: ScanResult
     flagged_dependencies: list[FlaggedDependency]
     total_scanned: int
+    max_depth_reached: bool
+    node_cap_reached: bool
+
+
+# Phase 9: repo-wide dependency scanning.
+
+
+class UploadedManifest(BaseModel):
+    """One manifest file's raw content, as uploaded by the CLI - the backend
+    never reads a server-side filesystem path for this (see routers/repo.py);
+    the CLI is what has access to the user's local repo."""
+
+    path: str
+    content: str
+
+# How a package's scanned version was determined - a meaningful accuracy
+# distinction the report is honest about, not an implementation detail to
+# hide: "lockfile"/"exact" mean we know precisely what's installed, "range"
+# means we picked the latest version satisfying a manifest's range (which
+# may not be what's actually on disk), "unresolved" means no constraint was
+# given at all and latest was used.
+ResolutionMethod = Literal["lockfile", "exact", "range", "unresolved"]
+
+
+class RepoManifestInfo(BaseModel):
+    """One manifest file the repo scan found and parsed."""
+
+    path: str
+    ecosystem: Ecosystem
+    kind: str  # "package.json", "package-lock.json", "yarn.lock", "requirements.txt", "pyproject.toml", "pom.xml"
+    direct_dependency_count: int
+
+
+class RepoPackageResult(BaseModel):
+    """One scanned package within a repo scan - either a direct dependency
+    declared in a manifest, or a transitive dependency reached by walking a
+    direct dependency's own dependency graph (Phase 8's machinery)."""
+
+    scan: ScanResult
+    is_direct: bool
+    pulled_in_by: Optional[str] = None  # the direct dependency's name, if transitive
+    path: list[str]
+    resolution_method: ResolutionMethod
+    manifest_path: Optional[str] = None  # which manifest declared it, if direct
+
+
+class RepoScanReport(BaseModel):
+    """Phase 9: one aggregated report across every dependency (direct and
+    transitive) found across every manifest in a repo. packages is ranked
+    worst-first (see repo_scan.py) so the most urgent issues surface
+    immediately rather than being buried in an alphabetical list."""
+
+    manifests: list[RepoManifestInfo]
+    packages: list[RepoPackageResult]
+    total_scanned: int
+    direct_count: int
+    transitive_count: int
+    flagged_count: int
+    vulnerable_count: int
+    vulnerability_severity_counts: dict[str, int]
     max_depth_reached: bool
     node_cap_reached: bool
