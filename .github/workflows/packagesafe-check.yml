@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - id: scan
         uses: ./action
+        env:
+          PACKAGESAFE_API_URL: ${{ secrets.PACKAGESAFE_API_URL }}
         with:
           package: reactt
       - name: Verify it actually failed
@@ -26,5 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./action
+        env:
+          PACKAGESAFE_API_URL: ${{ secrets.PACKAGESAFE_API_URL }}
         with:
           package: axios
