@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DependencyChainViz from "@/components/DependencyChainViz";
 import type { DependencyTree, Ecosystem } from "@/lib/scan";
 
 const VERDICT_DOT: Record<string, string> = {
@@ -95,7 +96,22 @@ export default function DependencyTreeSection({
       {tree.flagged_dependencies.length === 0 ? (
         <p className="text-muted">No flagged transitive dependencies found.</p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <>
+          <DependencyChainViz
+            ecosystem={ecosystem}
+            rootPackage={tree.root.package}
+            rootVerdict={tree.root.verdict}
+            flaggedDependencies={tree.flagged_dependencies}
+          />
+          <p className="text-xs text-muted">
+            Each highlighted node is a flagged dependency - click one to see its own result page.
+            The path traces exactly how it entered {tree.root.package}&apos;s dependency graph.
+          </p>
+        </>
+      )}
+
+      {tree.flagged_dependencies.length > 0 && (
+        <ul className="flex flex-col gap-3" aria-label="Flagged dependency details">
           {tree.flagged_dependencies.map((dep) => (
             <li key={`${dep.package}@${dep.version}`} className="rounded-lg border border-border p-3">
               <div className="flex items-center gap-2">

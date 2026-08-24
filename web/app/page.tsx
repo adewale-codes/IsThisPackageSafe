@@ -37,32 +37,19 @@ export default function HomePage() {
       <section className="border-t border-border bg-surface">
         <div className="mx-auto max-w-5xl px-6 py-16 sm:py-24">
           <h2 className="text-2xl font-bold sm:text-3xl">How it works</h2>
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div className="rounded-xl border border-border bg-background p-5">
-              <h3 className="text-base font-semibold text-accent">
-                1. Deterministic heuristics
-              </h3>
-              <p className="mt-2 text-sm text-muted">
-                Every scan runs a fixed set of checks against the npm registry and
-                GitHub: package age, maintainer change history, install scripts,
-                typosquatting, dependency count, and repo/npm activity mismatches.
-                Each contributes points to a 0–100 risk score - no LLM involved,
-                so results are fast and reproducible.
-              </p>
-            </div>
-            <div className="rounded-xl border border-border bg-background p-5">
-              <h3 className="text-base font-semibold text-accent">
-                2. LLM deep scan (coming soon)
-              </h3>
-              <p className="mt-2 text-sm text-muted">
-                Packages that already score as suspicious, or trip a
-                danger-severity finding, get flagged for a deeper LLM-driven
-                source inspection - looking for obfuscated payloads or
-                exfiltration code that static rules alone would miss. This
-                layer is still in development.
-              </p>
-            </div>
-          </div>
+          <p className="mt-3 max-w-2xl text-muted">
+            Not an AI score - an auditable pipeline of three independent signals, each shown
+            separately on every result: deterministic supply-chain heuristics, real CVE/GHSA data
+            from OSV.dev, and an LLM source-code review that only runs when the heuristics already
+            flagged something.
+          </p>
+          <Link
+            href="/how-it-works"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+          >
+            Read the full breakdown
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
     </main>

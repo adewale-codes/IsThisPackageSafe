@@ -4,6 +4,7 @@ import VulnerabilitiesList from "@/components/VulnerabilitiesList";
 import ShareButtons from "@/components/ShareButtons";
 import VersionSelector from "@/components/VersionSelector";
 import DependencyTreeSection from "@/components/DependencyTreeSection";
+import RegistryLink from "@/components/RegistryLink";
 import SearchBox from "@/components/SearchBox";
 import type { ScanResult, VersionEntry } from "@/lib/scan";
 
@@ -52,6 +53,13 @@ export default function ScanResultView({
             {result.metadata.description && (
               <p className="mt-1 text-sm text-muted">{result.metadata.description}</p>
             )}
+            <div className="mt-2">
+              <RegistryLink
+                ecosystem={result.ecosystem}
+                packageName={result.package}
+                version={result.resolved_version}
+              />
+            </div>
           </div>
           <VerdictBadge verdict={result.verdict} size="lg" />
         </div>
