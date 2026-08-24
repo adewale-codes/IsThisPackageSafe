@@ -1,8 +1,11 @@
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: ../backend.Dockerfile
+      # Repo root, matching Railway (railway.json) - backend.Dockerfile's
+      # COPY paths are repo-root-relative, so both environments need to
+      # build from the same context to share one Dockerfile without diverging.
+      context: .
+      dockerfile: backend.Dockerfile
     ports:
       - "8000:8000"
     environment:

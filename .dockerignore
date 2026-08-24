@@ -1,0 +1,17 @@
+# Build context is now the repo root for both Docker Compose and Railway
+# (see docker-compose.yml, railway.json) - without this, every build sends
+# the whole repo (node_modules, .venv, .git, .next, ...) to the Docker
+# daemon before COPY even filters anything out.
+.git/
+**/node_modules/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+web/.next/
+web/out/
+*.log
+.env
+.env.local
+**/.env
+**/.env.local

@@ -1,12 +1,13 @@
-# Build context is ./backend (see docker-compose.yml)
+# Build context is the repo root (see docker-compose.yml and railway.json) -
+# COPY paths below are relative to repo root, not backend/.
 FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app ./app
+COPY backend/app ./app
 
 EXPOSE 8000
 
