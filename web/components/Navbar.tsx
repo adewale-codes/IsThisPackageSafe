@@ -17,6 +17,12 @@ export default function Navbar() {
           <Link href="/cli" className="text-xs uppercase tracking-widest text-muted hover:text-accent">
             CLI
           </Link>
+          <Link
+            href="/transparency"
+            className="text-xs uppercase tracking-widest text-muted hover:text-accent"
+          >
+            Transparency
+          </Link>
           <span className="hidden text-xs uppercase tracking-widest text-muted sm:inline">
             supply-chain risk scanner
           </span>

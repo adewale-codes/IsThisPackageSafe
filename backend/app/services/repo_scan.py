@@ -45,7 +45,7 @@ from app.models.schemas import (
     VulnerabilityCheckStatus,
     VulnerabilityFinding,
 )
-from app.services import dependency_tree, ecosystems, manifest, scanner, version_resolve, vuln_client
+from app.services import dependency_tree, ecosystems, manifest, scanner, stats, version_resolve, vuln_client
 
 _KIND_BY_BASENAME: dict[str, tuple[Ecosystem, str]] = {
     "package.json": ("npm", "package.json"),
@@ -380,6 +380,11 @@ async def scan_repo(
             for entry in provenance.values()
         ]
         packages.sort(key=lambda p: (-p.scan.risk_score, p.scan.package.lower()))
+
+        # Phase 12: one "repo" scan event, built from every package
+        # actually scanned across every manifest (direct and transitive) -
+        # patched vulnerabilities are already in p.scan by this point.
+        await stats.record_scan(stats.batch_from_results("repo", [p.scan for p in packages]))
 
         direct_count = sum(1 for p in packages if p.is_direct)
         flagged_count = sum(1 for p in packages if p.scan.findings)

@@ -229,6 +229,43 @@ class RepoPackageResult(BaseModel):
     manifest_path: Optional[str] = None  # which manifest declared it, if direct
 
 
+# Phase 12: public, aggregate-only transparency stats. No package names,
+# no per-user data, no timestamps finer than "day" - see stats.py.
+
+
+class ScanCounts(BaseModel):
+    single: int = 0
+    tree: int = 0
+    repo: int = 0
+    total: int = 0
+
+
+class EcosystemCounts(BaseModel):
+    npm: int = 0
+    pypi: int = 0
+    maven: int = 0
+
+
+class VulnerabilitySeverityCounts(BaseModel):
+    critical: int = 0
+    high: int = 0
+    medium: int = 0
+    low: int = 0
+    unknown: int = 0
+    total: int = 0
+
+
+class StatsResponse(BaseModel):
+    generated_at: str
+    tracking_since: Optional[str] = None
+    recording_enabled: bool
+    scans: ScanCounts
+    unique_packages_scanned: int
+    ecosystems: EcosystemCounts
+    vulnerabilities_found: VulnerabilitySeverityCounts
+    heuristic_findings_triggered: int
+
+
 class RepoScanReport(BaseModel):
     """Phase 9: one aggregated report across every dependency (direct and
     transitive) found across every manifest in a repo. packages is ranked

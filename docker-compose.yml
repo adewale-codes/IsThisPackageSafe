@@ -1,4 +1,25 @@
 services:
+  postgres:
+    # Phase 12: local equivalent of Railway's Postgres addon. The backend
+    # degrades gracefully without DATABASE_URL set at all (see
+    # backend/app/services/db.py) - this service exists so local dev also
+    # gets real stats persistence, not because anything requires it.
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=packagesafe
+      - POSTGRES_PASSWORD=packagesafe
+      - POSTGRES_DB=packagesafe
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U packagesafe"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   backend:
     build:
       # Repo root, matching Railway (railway.json) - backend.Dockerfile's
@@ -16,6 +37,10 @@ services:
       # ANTHROPIC_API_KEY - see backend/app/services/deep_scan.py).
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DATABASE_URL=postgresql://packagesafe:packagesafe@postgres:5432/packagesafe
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -40,3 +65,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  postgres_data:

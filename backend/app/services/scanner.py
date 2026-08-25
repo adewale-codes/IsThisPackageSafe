@@ -14,7 +14,7 @@ from app.models.schemas import (
     VulnerabilityCheckStatus,
     VulnerabilityFinding,
 )
-from app.services import deep_scan, ecosystems, github_client, npm_client, scoring, vuln_client
+from app.services import deep_scan, ecosystems, github_client, npm_client, scoring, stats, vuln_client
 
 _HTTP_TIMEOUT = 10.0
 
@@ -173,7 +173,16 @@ async def scan_package(
     ecosystem: Ecosystem, package_identifier: str, version: Optional[str] = None
 ) -> ScanResult:
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT) as client:
-        return await _scan_with_client(client, ecosystem, package_identifier, version)
+        result = await _scan_with_client(client, ecosystem, package_identifier, version)
+
+    # Phase 12: recorded here specifically (not inside _scan_with_client) -
+    # that function is also what every tree/repo-scan node runs through
+    # internally, and those get counted as one "tree"/"repo" scan event
+    # each by dependency_tree.py/repo_scan.py, not one "single" event per
+    # node. A no-op if DATABASE_URL isn't configured - see stats.py.
+    await stats.record_scan(stats.batch_from_results("single", [result]))
+
+    return result
 
 
 def apply_vulnerabilities(

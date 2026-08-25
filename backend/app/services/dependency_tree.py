@@ -47,7 +47,7 @@ from typing import Callable, Optional
 import httpx
 
 from app.models.schemas import DependencyTree, Ecosystem, FlaggedDependency, ScanResult
-from app.services import ecosystems, scanner
+from app.services import ecosystems, scanner, stats
 
 OnVisit = Callable[[str, ScanResult, list[str]], None]
 
@@ -256,6 +256,15 @@ async def build_dependency_tree(
                 # node cap - reuse that flag rather than adding a new field
                 # the API/UI would also need to know about.
                 state.node_cap_reached = True
+
+        # Phase 12: one "tree" scan event, built from every node actually
+        # scanned (not just the flagged subset DependencyTree exposes
+        # publicly) - state.memo's tasks are already resolved, so
+        # re-awaiting them here costs nothing. return_exceptions=True since
+        # the timeout path above may have cancelled some of them.
+        node_results = await asyncio.gather(*state.memo.values(), return_exceptions=True)
+        all_results = [root_result] + [r for r in node_results if isinstance(r, ScanResult)]
+        await stats.record_scan(stats.batch_from_results("tree", all_results))
 
         return DependencyTree(
             root=root_result,
