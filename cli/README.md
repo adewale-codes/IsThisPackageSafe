@@ -157,6 +157,13 @@ Supply-chain findings:
      Package metadata does not link to a GitHub repository.
 ```
 
+## Using this from an AI agent instead
+
+If you want Claude (or another MCP-compatible agent) to call PackageSafe directly
+mid-task - "is this safe to add?", "audit my dependencies" - instead of running
+this CLI yourself, see [`../mcp`](../mcp) for an MCP server exposing the same
+scanning as tools.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) - covers local development and how

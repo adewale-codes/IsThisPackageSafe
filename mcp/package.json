@@ -1,0 +1,43 @@
+{
+  "name": "safecheck-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing PackageSafe's supply-chain risk scanning (npm/PyPI/Maven) as tools an AI agent can call directly.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "security",
+    "supply-chain",
+    "vulnerability",
+    "npm",
+    "pypi",
+    "maven",
+    "claude"
+  ],
+  "homepage": "https://packagesafe.dev/cli",
+  "bugs": {
+    "url": "https://github.com/adewale-codes/IsThisPackageSafe/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adewale-codes/IsThisPackageSafe.git",
+    "directory": "mcp"
+  },
+  "license": "MIT",
+  "author": "PackageSafe",
+  "type": "commonjs",
+  "bin": {
+    "safecheck-mcp": "bin/server.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  }
+}

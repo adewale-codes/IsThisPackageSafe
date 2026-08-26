@@ -138,8 +138,62 @@ async function scanPackage(
   return response.json();
 }
 
+/**
+ * Calls the PackageSafe API's GET /versions/{ecosystem}/{package} endpoint
+ * (Phase 8) - full version history, newest-first, with publish dates where
+ * available. Not exposed as its own CLI command today (the version
+ * dropdown lives on the website), but Phase 13's MCP server needs it for
+ * list_versions, and reusing this module rather than duplicating the
+ * fetch/error-handling logic is the whole point of lib/scan.js existing.
+ * @returns {Promise<object[]>} array of {version, published_at}
+ */
+async function fetchVersions(packageName, { apiUrl, ecosystem = DEFAULT_ECOSYSTEM } = {}) {
+  const resolvedApiUrl = resolveApiUrl(apiUrl);
+  const encodedPath = packageName
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  const url = `${resolvedApiUrl}/versions/${ecosystem}/${encodedPath}`;
+
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (err) {
+    throw new NetworkError(
+      `Could not reach PackageSafe API at ${resolvedApiUrl} (${err.message}). Is the backend running?`,
+      err
+    );
+  }
+
+  if (response.status === 404) {
+    let detail;
+    try {
+      detail = (await response.json()).detail;
+    } catch {
+      // fall through to default message
+    }
+    throw new PackageNotFoundError(packageName, ecosystem, detail);
+  }
+
+  if (!response.ok) {
+    let detail;
+    try {
+      detail = (await response.json()).detail;
+    } catch {
+      // fall through to default message
+    }
+    throw new ApiError(
+      detail || `PackageSafe API returned status ${response.status}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
 module.exports = {
   scanPackage,
+  fetchVersions,
   resolveApiUrl,
   buildScanUrl,
   parsePackageArg,
