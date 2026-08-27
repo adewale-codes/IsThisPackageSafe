@@ -2,7 +2,7 @@
 
 Supply-chain risk scanning for npm, PyPI, and Maven packages - typosquats,
 maintainer takeovers, install-script surprises, known CVEs, and repo-wide
-dependency scanning. Live at [packagesafe.dev](https://packagesafe.dev).
+dependency scanning. Live at [packagesafe.dev]([https://packagesafe.dev](https://is-this-package-safe-3zp7x8kwi-adewale-codes-projects.vercel.app/)).
 
 ## Project structure
 
