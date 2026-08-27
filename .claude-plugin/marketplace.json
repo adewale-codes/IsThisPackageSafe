@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "IsThisPackageSafe",
+  "description": "PackageSafe's own Claude Code plugin marketplace - supply-chain risk scanning for npm, PyPI, and Maven packages.",
+  "owner": {
+    "name": "PackageSafe"
+  },
+  "plugins": [
+    {
+      "name": "safecheck",
+      "description": "Scan npm, PyPI, and Maven packages for supply-chain risk and known vulnerabilities before you install them, via the live PackageSafe scanning service.",
+      "author": {
+        "name": "PackageSafe"
+      },
+      "category": "security",
+      "source": "./plugin",
+      "homepage": "https://packagesafe.dev/cli"
+    }
+  ]
+}

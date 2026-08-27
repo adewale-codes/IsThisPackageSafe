@@ -11,11 +11,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "PackageSafe - npm package risk scanner",
+    default: "PackageSafe - npm, PyPI, and Maven package risk scanner",
     template: "%s | PackageSafe",
   },
   description:
-    "Instant risk scores for any npm package. Catch typosquats, maintainer takeovers, and install-script surprises before you npm install.",
+    "Instant risk scores for any npm, PyPI, or Maven package. Catch typosquats, maintainer takeovers, and install-script surprises before they end up in your lockfile.",
   twitter: {
     card: "summary_large_image",
   },

@@ -109,6 +109,10 @@ def build_report(scanned: list[dict], failed: list[dict]) -> dict:
             "package": r["package"],
             "version": r["resolved_version"],
             "risk_score": r["risk_score"],
+            # Additive - the API includes this alongside risk_score now (see
+            # backend's ScanResult.safety_score); .get() so this script
+            # doesn't break if pointed at an older backend that predates it.
+            "safety_score": r.get("safety_score", 100 - r["risk_score"]),
             "verdict": r["verdict"],
             "description": r["metadata"].get("description"),
             "top_finding": (

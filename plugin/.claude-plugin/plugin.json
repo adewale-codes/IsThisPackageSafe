@@ -1,0 +1,20 @@
+{
+  "name": "safecheck",
+  "version": "0.1.0",
+  "description": "Scan npm, PyPI, and Maven packages for supply-chain risk and known vulnerabilities before you install them - typosquats, maintainer takeovers, install-script surprises, and real CVE/GHSA data, all via the live PackageSafe scanning service.",
+  "author": {
+    "name": "PackageSafe"
+  },
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "supply-chain",
+    "vulnerability",
+    "audit",
+    "npm",
+    "pypi",
+    "maven",
+    "cve"
+  ],
+  "homepage": "https://packagesafe.dev/cli"
+}

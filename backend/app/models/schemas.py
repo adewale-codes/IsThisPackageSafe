@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 Severity = Literal["info", "warning", "danger"]
 Verdict = Literal["safe", "suspicious", "investigate"]
@@ -150,6 +150,16 @@ class ScanResult(BaseModel):
     vulnerabilities: list[VulnerabilityFinding]
     vulnerability_check: VulnerabilityCheckStatus
 
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def safety_score(self) -> int:
+        """100 - risk_score, for surfaces that read better framed positively
+        ("94/100 safe" vs "6/100 risk"). Purely a display companion to
+        risk_score - always derived, never stored or computed independently,
+        so the two can never drift apart. scoring.py's actual heuristics/
+        thresholds are untouched by this; only the label changes."""
+        return 100 - self.risk_score
+
 
 class VersionEntry(BaseModel):
     """One entry in a package's version history (Phase 8)."""
@@ -172,6 +182,12 @@ class FlaggedDependency(BaseModel):
     verdict: Verdict
     findings: list[Finding]
     vulnerabilities: list[VulnerabilityFinding]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def safety_score(self) -> int:
+        """See ScanResult.safety_score - same derivation, same reasoning."""
+        return 100 - self.risk_score
 
 
 class DependencyTree(BaseModel):

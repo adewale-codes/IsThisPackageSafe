@@ -161,8 +161,15 @@ Supply-chain findings:
 
 If you want Claude (or another MCP-compatible agent) to call PackageSafe directly
 mid-task - "is this safe to add?", "audit my dependencies" - instead of running
-this CLI yourself, see [`../mcp`](../mcp) for an MCP server exposing the same
-scanning as tools.
+this CLI yourself, there are two ways to set that up:
+
+- **Don't want to edit a config file?** Install the [Claude Code plugin](../plugin) -
+  two copy-pasteable commands, no JSON editing.
+- Prefer to manage an MCP config yourself (or use Claude Desktop / another MCP
+  client)? See [`../mcp`](../mcp).
+
+Both give Claude the exact same tools, calling the exact same live scanning
+service.
 
 ## Contributing
 

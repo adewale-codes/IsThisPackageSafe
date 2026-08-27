@@ -5,15 +5,15 @@ import { useState } from "react";
 export default function ShareButtons({
   packageName,
   verdict,
-  riskScore,
+  safetyScore,
 }: {
   packageName: string;
   verdict: string;
-  riskScore: number;
+  safetyScore: number;
 }) {
   const [copied, setCopied] = useState(false);
 
-  const shareText = `${packageName} scored ${riskScore}/100 (${verdict}) on PackageSafe`;
+  const shareText = `${packageName} scored ${safetyScore}/100 safe (${verdict}) on PackageSafe`;
 
   async function handleCopy() {
     const url = window.location.href;

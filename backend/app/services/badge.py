@@ -78,11 +78,20 @@ def render_badge(label: str, message: str, color: str) -> str:
 """
 
 
-async def build_badge_svg(package_name: str) -> str:
+async def build_badge_svg(package_name: str, score_type: str = "safety") -> str:
     try:
         result = await get_cached_scan(package_name)
     except PackageNotFoundError:
         return render_badge("PackageSafe", "not found", _UNKNOWN_COLOR)
 
-    message = f"{result.risk_score}/100"
+    # Leads with the safety-framed number by default ("94/100 safe" reads
+    # better than "6/100 risk" at a glance, and this badge is the most
+    # visible public-facing surface - README embeds). ?score=risk keeps the
+    # original framing available for anyone who already embedded this and
+    # expects that number, unchanged - purely additive, see schemas.py's
+    # safety_score docstring.
+    if score_type == "risk":
+        message = f"{result.risk_score}/100 risk"
+    else:
+        message = f"{result.safety_score}/100 safe"
     return render_badge("PackageSafe", message, verdict_color(result.verdict))

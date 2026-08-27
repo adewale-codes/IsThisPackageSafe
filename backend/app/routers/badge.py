@@ -6,8 +6,8 @@ router = APIRouter()
 
 
 @router.get("/badge/{package_name}.svg")
-async def get_badge(package_name: str) -> Response:
-    svg = await badge.build_badge_svg(package_name)
+async def get_badge(package_name: str, score: str = "safety") -> Response:
+    svg = await badge.build_badge_svg(package_name, score_type=score)
     return Response(
         content=svg,
         media_type="image/svg+xml",

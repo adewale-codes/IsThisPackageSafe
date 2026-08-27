@@ -83,10 +83,11 @@ export default function ScanResultView({
 
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-4xl font-bold tabular-nums">{result.risk_score}</span>
-            <span className="text-muted">/ 100 risk score</span>
+            <span className="font-mono text-4xl font-bold tabular-nums">{result.safety_score}</span>
+            <span className="text-muted">/ 100 safe</span>
           </div>
           <p className="mt-1 text-xs text-muted">
+            risk score <span className="font-mono">{result.risk_score}</span>/100 -{" "}
             <span className="font-mono">{result.heuristics_score}</span> from supply-chain
             heuristics &middot; <span className="font-mono">{result.vulnerability_score}</span>{" "}
             from known vulnerabilities
@@ -150,7 +151,7 @@ export default function ScanResultView({
         <ShareButtons
           packageName={result.package}
           verdict={result.verdict}
-          riskScore={result.risk_score}
+          safetyScore={result.safety_score}
         />
       </div>
 

@@ -80,9 +80,9 @@ export default async function OpengraphImage({
 
             <div style={{ display: "flex", alignItems: "baseline", marginTop: 36, gap: "20px" }}>
               <div style={{ display: "flex", fontSize: 160, fontWeight: 700, color }}>
-                {result.risk_score}
+                {result.safety_score}
               </div>
-              <div style={{ display: "flex", fontSize: 36, color: "#64748b" }}>/ 100</div>
+              <div style={{ display: "flex", fontSize: 36, color: "#64748b" }}>/ 100 safe</div>
             </div>
 
             <div

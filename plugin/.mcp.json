@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "safecheck": {
+      "command": "npx",
+      "args": ["-y", "safecheck-mcp"]
+    }
+  }
+}

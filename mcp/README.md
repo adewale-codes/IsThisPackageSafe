@@ -22,6 +22,22 @@ GitHub, and OSV.dev state as of right now - never a static or cached snapshot.
 | `scan_repo` | asked to audit an entire project's dependencies at once (given the actual manifest file contents) |
 | `list_versions` | need to see what versions of a package actually exist, e.g. before recommending an older one |
 
+## Don't want to edit a config file?
+
+If you use Claude Code and this feels like more setup than you want, install
+the [Claude Code plugin](../plugin) instead - it's the exact same thing
+(this MCP server), just a couple of copy-pasteable commands instead of hand-
+editing JSON:
+
+```
+/plugin marketplace add adewale-codes/IsThisPackageSafe
+/plugin install safecheck@IsThisPackageSafe
+```
+
+Everything below is for setting this MCP server up directly - useful for
+Claude Desktop, other MCP clients, or if you'd rather manage the config
+yourself.
+
 ## Install & configure
 
 ### Claude Code

@@ -43,7 +43,7 @@ function formatReport(result) {
   const verdictMeta = VERDICT_META[result.verdict] || VERDICT_META.investigate;
 
   lines.push(`${verdictMeta.icon} ${paint(verdictMeta.label.toUpperCase(), "bold", verdictMeta.color)}`);
-  lines.push(paint(`Risk score: ${result.risk_score}/100`, "bold"));
+  lines.push(paint(`${result.safety_score}/100 safe`, "bold") + paint(` (risk score: ${result.risk_score}/100)`, "dim"));
   lines.push(`${result.package}@${result.resolved_version}`);
   lines.push("");
 
@@ -147,7 +147,7 @@ function formatTreeReport(tree) {
     const verdictMeta = VERDICT_META[dep.verdict] || VERDICT_META.investigate;
     lines.push(
       `  ${verdictMeta.icon} ${paint(`${dep.package}@${dep.version}`, "bold")} ` +
-        paint(`(risk ${dep.risk_score}/100)`, "dim")
+        paint(`(${dep.safety_score}/100 safe, risk ${dep.risk_score}/100)`, "dim")
     );
     lines.push(paint(`     path: ${dep.path.join(" -> ")}`, "dim"));
     for (const finding of dep.findings || []) {
@@ -210,7 +210,7 @@ function formatRepoReport(report) {
     const origin = pkg.is_direct ? "direct" : `transitive via ${pkg.pulled_in_by}`;
     lines.push(
       `  ${verdictMeta.icon} ${paint(`${s.ecosystem}:${s.package}@${s.resolved_version}`, "bold")} ` +
-        paint(`risk ${s.risk_score}/100`, "dim") +
+        paint(`${s.safety_score}/100 safe (risk ${s.risk_score}/100)`, "dim") +
         ` - ${origin}` +
         paint(` [${pkg.resolution_method}]`, "dim")
     );

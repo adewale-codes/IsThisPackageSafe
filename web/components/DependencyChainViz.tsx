@@ -140,7 +140,7 @@ export default function DependencyChainViz({
           const sublabel = isRoot
             ? "root"
             : node.flagged
-              ? `risk ${node.flagged.risk_score}/100`
+              ? `${node.flagged.safety_score}/100 safe`
               : "not flagged";
 
           const content = (

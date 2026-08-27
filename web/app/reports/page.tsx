@@ -26,6 +26,9 @@ interface ReportEntry {
   package: string;
   version: string;
   risk_score: number;
+  // Older already-generated report snapshots predate this field - computed
+  // as a fallback below rather than assumed present.
+  safety_score?: number;
   verdict: Verdict;
   description: string | null;
   top_finding: ReportFinding | null;
@@ -99,7 +102,7 @@ export default function ReportsPage() {
             <tr>
               <th className="px-4 py-3">#</th>
               <th className="px-4 py-3">Package</th>
-              <th className="px-4 py-3">Score</th>
+              <th className="px-4 py-3">Safety / Risk</th>
               <th className="px-4 py-3">Verdict</th>
               <th className="px-4 py-3">Top finding</th>
             </tr>
@@ -122,8 +125,11 @@ export default function ReportsPage() {
                     </p>
                   )}
                 </td>
-                <td className="px-4 py-3 font-mono font-bold tabular-nums">
-                  {entry.risk_score}/100
+                <td className="px-4 py-3 font-mono tabular-nums">
+                  <span className="font-bold">
+                    {entry.safety_score ?? 100 - entry.risk_score}/100 safe
+                  </span>
+                  <span className="ml-1 text-xs text-muted">(risk {entry.risk_score}/100)</span>
                 </td>
                 <td className="px-4 py-3">
                   <VerdictBadge verdict={entry.verdict} size="sm" />

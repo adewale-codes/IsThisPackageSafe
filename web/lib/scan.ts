@@ -112,6 +112,10 @@ export interface ScanResult {
   package: string;
   resolved_version: string;
   risk_score: number;
+  /** 100 - risk_score - the same number, framed positively. Always derived
+   * server-side (never compute this independently), see the backend's
+   * ScanResult.safety_score docstring. */
+  safety_score: number;
   heuristics_score: number;
   vulnerability_score: number;
   verdict: Verdict;
@@ -137,6 +141,7 @@ export interface FlaggedDependency {
   version: string;
   path: string[];
   risk_score: number;
+  safety_score: number;
   verdict: Verdict;
   findings: Finding[];
   vulnerabilities: VulnerabilityFinding[];

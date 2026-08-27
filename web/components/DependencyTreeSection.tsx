@@ -119,7 +119,9 @@ export default function DependencyTreeSection({
                 <span className="font-mono font-semibold">
                   {dep.package}@{dep.version}
                 </span>
-                <span className="text-xs text-muted">risk {dep.risk_score}/100</span>
+                <span className="text-xs text-muted">
+                  {dep.safety_score}/100 safe (risk {dep.risk_score}/100)
+                </span>
               </div>
               <p className="mt-1 font-mono text-xs text-muted">{dep.path.join(" → ")}</p>
               <ul className="mt-2 flex flex-col gap-1 text-xs text-muted">
