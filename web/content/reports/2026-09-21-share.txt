@@ -1,0 +1,9 @@
+📊 PackageSafe's riskiest npm packages this week (Week of 2026-09-21):
+
+🟡 faker: 40/100 - Linked repository does not exist
+🟡 node-sass: 30/100 - Runs code automatically on install
+🟢 typescript: 15/100 - Full maintainer replacement in package history
+
+Full ranking + why each package scored what it did: https://packagesafe.dev/reports
+
+#npm #supplychainsecurity #opensource
