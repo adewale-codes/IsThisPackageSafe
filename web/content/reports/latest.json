@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-05T17:45:58.687657+00:00",
-  "period_label": "Week of 2026-10-05",
+  "generated_at": "2026-10-12T18:30:56.442441+00:00",
+  "period_label": "Week of 2026-10-12",
   "packages_scanned": 27,
   "packages_failed": 0,
   "failed": [],
@@ -88,7 +88,7 @@
     {
       "rank": 6,
       "package": "next",
-      "version": "16.3.8",
+      "version": "16.4.0",
       "risk_score": 15,
       "safety_score": 85,
       "verdict": "safe",
@@ -162,7 +162,7 @@
     {
       "rank": 11,
       "package": "express",
-      "version": "5.2.1",
+      "version": "5.3.0",
       "risk_score": 5,
       "safety_score": 95,
       "verdict": "safe",
@@ -260,7 +260,7 @@
     {
       "rank": 19,
       "package": "@babel/core",
-      "version": "8.0.6",
+      "version": "8.0.7",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -310,7 +310,7 @@
     {
       "rank": 24,
       "package": "prettier",
-      "version": "3.9.9",
+      "version": "3.9.10",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -320,7 +320,7 @@
     {
       "rank": 25,
       "package": "dotenv",
-      "version": "18.0.5",
+      "version": "18.0.7",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
