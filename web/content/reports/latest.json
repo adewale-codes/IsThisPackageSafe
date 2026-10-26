@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-19T16:08:22.065554+00:00",
-  "period_label": "Week of 2026-10-19",
+  "generated_at": "2026-10-26T15:46:07.207773+00:00",
+  "period_label": "Week of 2026-10-26",
   "packages_scanned": 27,
   "packages_failed": 0,
   "failed": [],
@@ -88,7 +88,7 @@
     {
       "rank": 6,
       "package": "next",
-      "version": "16.4.2",
+      "version": "16.4.3",
       "risk_score": 15,
       "safety_score": 85,
       "verdict": "safe",
@@ -250,7 +250,7 @@
     {
       "rank": 18,
       "package": "webpack",
-      "version": "5.112.0",
+      "version": "5.112.2",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -260,7 +260,7 @@
     {
       "rank": 19,
       "package": "@babel/core",
-      "version": "8.0.7",
+      "version": "8.0.9",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -320,7 +320,7 @@
     {
       "rank": 25,
       "package": "dotenv",
-      "version": "18.0.8",
+      "version": "18.0.9",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
