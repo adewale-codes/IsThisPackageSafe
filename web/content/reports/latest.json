@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-26T15:46:07.207773+00:00",
-  "period_label": "Week of 2026-10-26",
+  "generated_at": "2026-11-02T19:04:37.127402+00:00",
+  "period_label": "Week of 2026-11-02",
   "packages_scanned": 27,
   "packages_failed": 0,
   "failed": [],
@@ -88,7 +88,7 @@
     {
       "rank": 6,
       "package": "next",
-      "version": "16.4.3",
+      "version": "16.4.4",
       "risk_score": 15,
       "safety_score": 85,
       "verdict": "safe",
@@ -178,7 +178,7 @@
     {
       "rank": 12,
       "package": "eslint",
-      "version": "10.13.0",
+      "version": "10.14.0",
       "risk_score": 5,
       "safety_score": 95,
       "verdict": "safe",
@@ -240,7 +240,7 @@
     {
       "rank": 17,
       "package": "axios",
-      "version": "1.20.0",
+      "version": "1.21.0",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -260,7 +260,7 @@
     {
       "rank": 19,
       "package": "@babel/core",
-      "version": "8.0.9",
+      "version": "8.1.0",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
