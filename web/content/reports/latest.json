@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-02T19:04:37.127402+00:00",
-  "period_label": "Week of 2026-11-02",
+  "generated_at": "2026-11-09T19:26:34.268516+00:00",
+  "period_label": "Week of 2026-11-09",
   "packages_scanned": 27,
   "packages_failed": 0,
   "failed": [],
@@ -88,7 +88,7 @@
     {
       "rank": 6,
       "package": "next",
-      "version": "16.4.4",
+      "version": "16.4.5",
       "risk_score": 15,
       "safety_score": 85,
       "verdict": "safe",
@@ -220,7 +220,7 @@
     {
       "rank": 15,
       "package": "vue",
-      "version": "3.5.44",
+      "version": "3.5.45",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -240,7 +240,7 @@
     {
       "rank": 17,
       "package": "axios",
-      "version": "1.21.0",
+      "version": "1.21.1",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -280,7 +280,7 @@
     {
       "rank": 21,
       "package": "commander",
-      "version": "15.0.0",
+      "version": "15.1.0",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
@@ -320,7 +320,7 @@
     {
       "rank": 25,
       "package": "dotenv",
-      "version": "18.0.9",
+      "version": "18.0.10",
       "risk_score": 0,
       "safety_score": 100,
       "verdict": "safe",
